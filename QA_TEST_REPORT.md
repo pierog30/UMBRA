@@ -33,7 +33,7 @@ excepciones durante las pruebas automaticas realizadas.
 
 ## Resultados medidos
 
-- Cargas aprobadas: 1,000 de 1,000.
+- Cargas de nivel: completadas correctamente.
 - Fallos del test: 0.
 - Errores de compilacion: 0.
 - Advertencias de compilacion: 0.
