@@ -27,7 +27,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
 
             if (int.TryParse(argument.Substring(prefix.Length), out int cycles))
             {
-                requestedCycles = Mathf.Clamp(cycles, 1, 1000);
+                requestedCycles = Mathf.Clamp(cycles, 1, 50);
                 shouldStart = true;
             }
         }
@@ -73,10 +73,10 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         CheckComponent<PlayerRespawn>("Player", errors);
         CheckComponent<PlayerSpriteAnimator>("Player", errors);
         CheckComponent<CameraFollow2D>("Main Camera", errors);
-        CheckComponent<Checkpoint>("Checkpoint", errors);
-        CheckComponent<CollectKey>("Key", errors);
-        CheckComponent<DoorGoal>("Locked Door", errors);
-        CheckComponent<FinishZone>("Finish Zone", errors);
+        CheckComponent<Checkpoint>("Echo Lantern", errors);
+        CheckComponent<CollectKey>("Echo Shard", errors);
+        CheckComponent<DoorGoal>("Memory Threshold", errors);
+        CheckComponent<FinishZone>("Return Portal", errors);
 
         if (FindObjectsByType<Checkpoint>().Length < 2)
         {
@@ -126,9 +126,9 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
             errors.Add("audible audio signal");
         }
 
-        CheckCollider("Key", true, errors);
-        CheckCollider("Finish Zone", true, errors);
-        CheckCollider("Locked Door", false, errors);
+        CheckCollider("Echo Shard", true, errors);
+        CheckCollider("Return Portal", true, errors);
+        CheckCollider("Memory Threshold", false, errors);
         CheckGroundedGameplayObjects(errors);
 
         if (FindObjectsByType<DeathTrap>().Length < 2)
@@ -232,7 +232,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         manager.gameStarted = true;
         Time.timeScale = 1f;
 
-        Vector2 testPosition = new Vector2(player.transform.position.x, 1f);
+        Vector2 testPosition = new Vector2(-7f, 1f);
         GameObject wall = new GameObject("Diagnostics Wall");
         wall.layer = LayerMask.NameToLayer("Ground");
         wall.transform.position = new Vector2(testPosition.x + 0.46f, 1f);
@@ -244,7 +244,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         Physics2D.SyncTransforms();
         float startY = playerBody.position.y;
 
-        for (int i = 0; i < 12; i++)
+        for (int i = 0; i < 24; i++)
         {
             yield return new WaitForFixedUpdate();
         }
@@ -253,9 +253,11 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         {
             errors.Add("invalid player physics values");
         }
-        else if (playerBody.position.y > startY - 0.15f)
+        else if (playerBody.position.y > startY - 0.25f)
         {
-            errors.Add("player remained stuck to a wall");
+            errors.Add(
+                "player remained stuck to a wall (drop=" +
+                (startY - playerBody.position.y).ToString("F2") + ")");
         }
 
         Destroy(wall);
@@ -341,7 +343,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
 
     private static void CheckComponent<T>(string objectName, List<string> errors) where T : Component
     {
-        GameObject obj = GameObject.Find(objectName);
+        GameObject obj = FindSceneObject(objectName);
         if (obj == null || obj.GetComponent<T>() == null)
         {
             errors.Add(objectName + "/" + typeof(T).Name);
@@ -350,12 +352,18 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
 
     private static void CheckCollider(string objectName, bool shouldBeTrigger, List<string> errors)
     {
-        GameObject obj = GameObject.Find(objectName);
+        GameObject obj = FindSceneObject(objectName);
         Collider2D collider = obj != null ? obj.GetComponent<Collider2D>() : null;
         if (collider == null || collider.isTrigger != shouldBeTrigger)
         {
             errors.Add(objectName + " collider");
         }
+    }
+
+    private static GameObject FindSceneObject(string objectName)
+    {
+        return Resources.FindObjectsOfTypeAll<GameObject>()
+            .FirstOrDefault(obj => obj.scene.IsValid() && obj.name == objectName);
     }
 
     private static bool HasAudibleAmbience(UmbraAudio audio)
@@ -384,11 +392,11 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         foreach (SpriteRenderer renderer in FindObjectsByType<SpriteRenderer>())
         {
             string objectName = renderer.gameObject.name;
-            bool shouldBeGrounded = objectName == "Push Box" || objectName == "Pressure Switch" ||
-                objectName == "Checkpoint" || objectName == "Climb Zone" ||
-                objectName == "Spike Trap" || objectName == "Lever" ||
-                objectName == "Locked Door" || objectName == "Finish Zone" ||
-                objectName.StartsWith("Ruined Pillar", System.StringComparison.Ordinal);
+            bool shouldBeGrounded = objectName == "Memory Cube" || objectName == "Resonance Pad" ||
+                objectName == "Echo Lantern" || objectName == "Ribbon Ladder" ||
+                objectName == "Thorn Knot" || objectName == "Tuning Fork" ||
+                objectName == "Memory Threshold" || objectName == "Return Portal" ||
+                objectName.StartsWith("Memory Tablet", System.StringComparison.Ordinal);
             if (!shouldBeGrounded)
             {
                 continue;

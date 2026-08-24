@@ -7,6 +7,7 @@ public class MovingPlatform2D : MonoBehaviour
     public float speed = 1.4f;
 
     private Rigidbody2D body;
+    private Rigidbody2D passengerBody;
     private Vector2 startPosition;
 
     private void Awake()
@@ -20,22 +21,28 @@ public class MovingPlatform2D : MonoBehaviour
     private void FixedUpdate()
     {
         float progress = (Mathf.Sin(Time.fixedTime * speed) + 1f) * 0.5f;
-        body.MovePosition(Vector2.Lerp(startPosition, startPosition + offset, progress));
+        Vector2 targetPosition = Vector2.Lerp(startPosition, startPosition + offset, progress);
+        Vector2 movement = targetPosition - body.position;
+        body.MovePosition(targetPosition);
+        if (passengerBody != null)
+        {
+            passengerBody.position += movement;
+        }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.collider.GetComponent<PlayerController2D>() != null)
         {
-            collision.transform.SetParent(transform);
+            passengerBody = collision.rigidbody;
         }
     }
 
     private void OnCollisionExit2D(Collision2D collision)
     {
-        if (collision.collider.GetComponent<PlayerController2D>() != null && collision.transform.parent == transform)
+        if (collision.rigidbody == passengerBody)
         {
-            collision.transform.SetParent(null);
+            passengerBody = null;
         }
     }
 }

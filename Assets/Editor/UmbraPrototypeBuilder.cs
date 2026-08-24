@@ -8,7 +8,7 @@ using UnityEngine.Rendering;
 public static class UmbraPrototypeBuilder
 {
     private const string MarkerPath = "Assets/UMBRA_SETUP_DONE.txt";
-    private const string SetupVersion = "UMBRA five-level build v14";
+    private const string SetupVersion = "UMBRA Archive of Echoes build v15";
     private const float MainGroundY = -2.65f;
     private const float MainGroundHeight = 0.8f;
     private const float MainSurfaceY = MainGroundY + (MainGroundHeight * 0.28f);
@@ -22,6 +22,14 @@ public static class UmbraPrototypeBuilder
         "Assets/Scenes/Level_03_Factory.unity",
         "Assets/Scenes/Level_04_Caverns.unity",
         "Assets/Scenes/Level_05_Escape.unity"
+    };
+    private static readonly Color[] LevelColors =
+    {
+        new Color(0.12f, 0.55f, 0.56f),
+        new Color(0.55f, 0.22f, 0.53f),
+        new Color(0.70f, 0.38f, 0.14f),
+        new Color(0.18f, 0.38f, 0.62f),
+        new Color(0.35f, 0.24f, 0.64f)
     };
 
     [InitializeOnLoadMethod]
@@ -46,29 +54,29 @@ public static class UmbraPrototypeBuilder
         EnsureLayer("Ground", 6);
         ConfigureWindowsPlayer();
 
-        Sprite black = CreateColorSprite("black_square", new Color(0.02f, 0.02f, 0.025f, 1f));
-        Sprite gray = CreateColorSprite("gray_square", new Color(0.45f, 0.45f, 0.48f, 1f));
+        Sprite hidden = CreateColorSprite("hidden_square", new Color(0.02f, 0.02f, 0.025f, 1f));
+        Sprite paper = CreateColorSprite("paper_square", new Color(0.95f, 0.9f, 0.72f, 1f));
         Sprite[] backgrounds =
         {
-            LoadSpriteAsset("Assets/Art/Backgrounds/foggy_forest.png", 100f),
-            LoadSpriteAsset("Assets/Art/Backgrounds/foggy_ruins.png", 100f),
-            LoadSpriteAsset("Assets/Art/Backgrounds/abandoned_factory.png", 100f),
-            LoadSpriteAsset("Assets/Art/Backgrounds/deep_caverns.png", 100f),
-            LoadSpriteAsset("Assets/Art/Backgrounds/final_escape.png", 100f)
+            LoadSpriteAsset("Assets/Art/Backgrounds/echo_garden.png", 100f),
+            LoadSpriteAsset("Assets/Art/Backgrounds/echo_letters_city.png", 100f),
+            LoadSpriteAsset("Assets/Art/Backgrounds/echo_clockwork.png", 100f),
+            LoadSpriteAsset("Assets/Art/Backgrounds/echo_rain_library.png", 100f),
+            LoadSpriteAsset("Assets/Art/Backgrounds/echo_observatory.png", 100f)
         };
         Sprite terrain = CreateTerrainSprite();
         Sprite[] characterFrames = CreateSheetFrames(
-            "Assets/Art/Character/umbra_character_sheet.png",
-            "Assets/Art/Character/Frames",
-            "character",
+            "Assets/Art/Character/lumo_character_sheet.png",
+            "Assets/Art/Character/LumoFrames",
+            "lumo",
             4,
             3,
             1.7f,
             false);
         Sprite[] props = CreateSheetFrames(
-            "Assets/Art/Props/umbra_props_sheet.png",
-            "Assets/Art/Props/Frames",
-            "prop",
+            "Assets/Art/Props/echo_props_sheet.png",
+            "Assets/Art/Props/EchoFrames",
+            "echo_prop",
             4,
             3,
             2f,
@@ -77,7 +85,7 @@ public static class UmbraPrototypeBuilder
 
         for (int level = 1; level <= ScenePaths.Length; level++)
         {
-            BuildLevel(level, backgrounds[level - 1], terrain, black, gray, characterFrames, props, noFriction);
+            BuildLevel(level, backgrounds[level - 1], terrain, hidden, paper, characterFrames, props, noFriction);
         }
 
         var buildScenes = new EditorBuildSettingsScene[ScenePaths.Length];
@@ -90,7 +98,7 @@ public static class UmbraPrototypeBuilder
         AssetDatabase.SaveAssets();
         EditorSceneManager.OpenScene(ScenePaths[0], OpenSceneMode.Single);
         Selection.activeObject = AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePaths[0]);
-        Debug.Log("UMBRA: five level scenes created.");
+        Debug.Log("UMBRA: El Archivo de los Ecos created with five memory chapters.");
     }
 
     private static void ConfigureWindowsPlayer()
@@ -108,10 +116,10 @@ public static class UmbraPrototypeBuilder
 
     private static void BuildLevel(
         int level,
-        Sprite forest,
+        Sprite backdrop,
         Sprite terrain,
-        Sprite black,
-        Sprite gray,
+        Sprite hidden,
+        Sprite paper,
         Sprite[] characterFrames,
         Sprite[] props,
         PhysicsMaterial2D noFriction)
@@ -127,19 +135,18 @@ public static class UmbraPrototypeBuilder
         camera.orthographic = true;
         camera.orthographicSize = 4.7f;
         camera.clearFlags = CameraClearFlags.SolidColor;
-        camera.backgroundColor = new Color(0.018f, 0.018f, 0.022f);
+        camera.backgroundColor = Color.Lerp(LevelColors[level - 1], new Color(0.08f, 0.11f, 0.16f), 0.72f);
 
-        Color levelTint = Color.Lerp(new Color(0.62f, 0.62f, 0.64f), Color.white, level * 0.07f);
         for (int i = 0; i < 8; i++)
         {
             GameObject background = CreateSpriteObject(
-                "Forest Background " + (i + 1),
-                forest,
+                "Memory Backdrop " + (i + 1),
+                backdrop,
                 new Vector2(-7f + (i * 19f), -0.1f),
                 new Vector2(1.15f, 1.15f));
             SpriteRenderer renderer = background.GetComponent<SpriteRenderer>();
             renderer.sortingOrder = -100;
-            renderer.color = levelTint;
+            renderer.color = Color.white;
         }
 
         GameObject player = CreatePlayer(characterFrames, noFriction);
@@ -148,28 +155,28 @@ public static class UmbraPrototypeBuilder
         follow.smoothSpeed = 9f;
         follow.SnapToTarget();
 
-        AddAtmosphere(gray, black, props, level);
+        AddMemoryDetails(paper, props, level);
 
         switch (level)
         {
             case 1:
-                BuildForestLevel(terrain, props);
+                BuildGardenLevel(terrain, props);
                 break;
             case 2:
-                BuildRuinsLevel(terrain, props);
+                BuildLettersLevel(terrain, props);
                 break;
             case 3:
-                BuildFactoryLevel(terrain, props);
+                BuildWorkshopLevel(terrain, props);
                 break;
             case 4:
-                BuildCavernsLevel(terrain, props);
+                BuildLibraryLevel(terrain, props);
                 break;
             default:
-                BuildEscapeLevel(terrain, props);
+                BuildObservatoryLevel(terrain, props);
                 break;
         }
 
-        GameObject killPlane = CreateTriggerObject("Bottomless Fog", black, new Vector2(500f, -7f), new Vector2(3000f, 1f));
+        GameObject killPlane = CreateTriggerObject("Lost Memory Fall", hidden, new Vector2(500f, -7f), new Vector2(3000f, 1f));
         killPlane.GetComponent<SpriteRenderer>().enabled = false;
         killPlane.AddComponent<DeathTrap>();
 
@@ -216,32 +223,33 @@ public static class UmbraPrototypeBuilder
         return player;
     }
 
-    private static void AddAtmosphere(Sprite gray, Sprite black, Sprite[] props, int level)
+    private static void AddMemoryDetails(Sprite paper, Sprite[] props, int level)
     {
-        SpriteRenderer fogA = CreateSpriteObject("Back Fog A", gray, new Vector2(52f, 2f), new Vector2(125f, 0.16f)).GetComponent<SpriteRenderer>();
-        fogA.color = new Color(0.85f, 0.85f, 0.88f, 0.08f);
-        fogA.sortingOrder = -20;
-        SpriteRenderer fogB = CreateSpriteObject("Back Fog B", gray, new Vector2(72f, 2.8f), new Vector2(118f, 0.12f)).GetComponent<SpriteRenderer>();
-        fogB.color = new Color(0.8f, 0.8f, 0.82f, 0.06f);
-        fogB.sortingOrder = -20;
+        Color chapterColor = LevelColors[level - 1];
+        SpriteRenderer ribbonA = CreateSpriteObject("Memory Ribbon A", paper, new Vector2(52f, 2f), new Vector2(125f, 0.10f)).GetComponent<SpriteRenderer>();
+        ribbonA.color = new Color(chapterColor.r, chapterColor.g, chapterColor.b, 0.16f);
+        ribbonA.sortingOrder = -20;
+        SpriteRenderer ribbonB = CreateSpriteObject("Memory Ribbon B", paper, new Vector2(72f, 2.8f), new Vector2(118f, 0.07f)).GetComponent<SpriteRenderer>();
+        ribbonB.color = new Color(0.96f, 0.64f, 0.28f, 0.12f);
+        ribbonB.sortingOrder = -20;
 
-        CreateDecoration("Ruined Pillar A", props[8], new Vector2(7f, MainSurfaceY), 1.05f, -8);
-        CreateDecoration("Ruined Pillar B", props[8], new Vector2(48f, MainSurfaceY), 0.9f, -8);
-        CreateDecoration("Ruined Pillar C", props[8], new Vector2(96f, MainSurfaceY), 0.78f, -8);
+        CreateDecoration("Memory Tablet A", props[8], new Vector2(7f, MainSurfaceY), 1.05f, -8);
+        CreateDecoration("Memory Tablet B", props[8], new Vector2(48f, MainSurfaceY), 0.9f, -8);
+        CreateDecoration("Memory Tablet C", props[8], new Vector2(96f, MainSurfaceY), 0.78f, -8);
     }
 
-    private static void BuildForestLevel(Sprite terrain, Sprite[] props)
+    private static void BuildGardenLevel(Sprite terrain, Sprite[] props)
     {
-        CreateGroundRoute(terrain, "Forest", new[]
+        CreateGroundRoute(terrain, "Garden", new[]
         {
             new Vector2(-3.5f, 11f), new Vector2(8f, 8f), new Vector2(19f, 8f),
             new Vector2(30f, 10f), new Vector2(43f, 12f), new Vector2(57f, 10f),
             new Vector2(71f, 12f), new Vector2(86f, 12f), new Vector2(104f, 20f),
             new Vector2(123f, 14f)
         });
-        CreateTerrain("Forest Upper Roots", terrain, new Vector2(19f, 0f), new Vector2(7f, 0.55f));
-        CreateTerrain("Forest Watch Path", terrain, new Vector2(47f, 0.2f), new Vector2(8f, 0.55f));
-        CreateTerrain("Forest Key Path", terrain, new Vector2(104f, 0.15f), new Vector2(11f, 0.55f));
+        CreateTerrain("Garden Voice Path", terrain, new Vector2(19f, 0f), new Vector2(7f, 0.55f));
+        CreateTerrain("Garden Ribbon Path", terrain, new Vector2(47f, 0.2f), new Vector2(8f, 0.55f));
+        CreateTerrain("Garden Echo Path", terrain, new Vector2(104f, 0.15f), new Vector2(11f, 0.55f));
 
         DeathTrap firstSpikes = CreateSpikes(props[5], new Vector2(8f, MainSurfaceY));
         CreateCrate(props[0], new Vector2(-3.2f, MainSurfaceY));
@@ -262,20 +270,20 @@ public static class UmbraPrototypeBuilder
         CreateExit(props[10], new Vector2(128f, MainSurfaceY));
     }
 
-    private static void BuildRuinsLevel(Sprite terrain, Sprite[] props)
+    private static void BuildLettersLevel(Sprite terrain, Sprite[] props)
     {
-        CreateGroundRoute(terrain, "Ruins", new[]
+        CreateGroundRoute(terrain, "Letters", new[]
         {
             new Vector2(-4f, 10f), new Vector2(10f, 8f), new Vector2(23f, 9f),
             new Vector2(36f, 10f), new Vector2(50f, 11f), new Vector2(65f, 11f),
             new Vector2(80f, 11f), new Vector2(96f, 12f), new Vector2(114f, 20f),
             new Vector2(130f, 10f)
         });
-        CreateMovingPlatform("Ruins Bridge A", terrain, new Vector2(3f, -1.45f), new Vector2(2.2f, 0.45f), new Vector2(3f, 0f), 1.05f);
-        CreateMovingPlatform("Ruins Lift", terrain, new Vector2(42.5f, -2f), new Vector2(2.2f, 0.45f), new Vector2(0f, 2.7f), 1.05f);
-        CreateMovingPlatform("Ruins Bridge B", terrain, new Vector2(72.5f, -1.2f), new Vector2(2.3f, 0.45f), new Vector2(3f, 0.8f), 0.95f);
-        CreateTerrain("Ruins Upper Hall", terrain, new Vector2(50f, 0.3f), new Vector2(10f, 0.55f));
-        CreateTerrain("Ruins Key Ledge", terrain, new Vector2(108f, 0.25f), new Vector2(10f, 0.55f));
+        CreateMovingPlatform("Letter Bridge A", terrain, new Vector2(3f, -1.45f), new Vector2(2.2f, 0.45f), new Vector2(3f, 0f), 1.05f);
+        CreateMovingPlatform("Envelope Lift", terrain, new Vector2(42.5f, -2f), new Vector2(2.2f, 0.45f), new Vector2(0f, 2.7f), 1.05f);
+        CreateMovingPlatform("Letter Bridge B", terrain, new Vector2(72.5f, -1.2f), new Vector2(2.3f, 0.45f), new Vector2(3f, 0.8f), 0.95f);
+        CreateTerrain("Unsent Letters Hall", terrain, new Vector2(50f, 0.3f), new Vector2(10f, 0.55f));
+        CreateTerrain("Letter Echo Ledge", terrain, new Vector2(108f, 0.25f), new Vector2(10f, 0.55f));
 
         CreateSpikes(props[5], new Vector2(10f, MainSurfaceY));
         CreateSaw(props[6], new Vector2(23f, -1.25f), new Vector2(2.2f, 0f), 1.35f);
@@ -292,20 +300,20 @@ public static class UmbraPrototypeBuilder
         CreateExit(props[10], new Vector2(130f, MainSurfaceY));
     }
 
-    private static void BuildFactoryLevel(Sprite terrain, Sprite[] props)
+    private static void BuildWorkshopLevel(Sprite terrain, Sprite[] props)
     {
-        CreateGroundRoute(terrain, "Factory", new[]
+        CreateGroundRoute(terrain, "Workshop", new[]
         {
             new Vector2(-3.5f, 11f), new Vector2(9f, 9f), new Vector2(22f, 9f),
             new Vector2(35f, 10f), new Vector2(49f, 11f), new Vector2(64f, 11f),
             new Vector2(79f, 11f), new Vector2(94f, 11f), new Vector2(110f, 15f),
             new Vector2(127f, 15f)
         });
-        CreateTerrain("Factory Low Ceiling A", terrain, new Vector2(-2.5f, -0.5f), new Vector2(5f, 0.7f));
-        CreateTerrain("Factory Catwalk A", terrain, new Vector2(30f, 0.25f), new Vector2(9f, 0.5f));
-        CreateTerrain("Factory Low Ceiling B", terrain, new Vector2(52f, -0.45f), new Vector2(6f, 0.7f));
-        CreateTerrain("Factory Catwalk B", terrain, new Vector2(94f, 0.3f), new Vector2(10f, 0.5f));
-        CreateMovingPlatform("Factory Elevator", terrain, new Vector2(72f, -2f), new Vector2(2.2f, 0.45f), new Vector2(0f, 2.8f), 1.15f);
+        CreateTerrain("Workshop Low Passage A", terrain, new Vector2(-2.5f, -0.5f), new Vector2(5f, 0.7f));
+        CreateTerrain("Workshop Clockwalk A", terrain, new Vector2(30f, 0.25f), new Vector2(9f, 0.5f));
+        CreateTerrain("Workshop Low Passage B", terrain, new Vector2(52f, -0.45f), new Vector2(6f, 0.7f));
+        CreateTerrain("Workshop Clockwalk B", terrain, new Vector2(94f, 0.3f), new Vector2(10f, 0.5f));
+        CreateMovingPlatform("Borrowed Hour Lift", terrain, new Vector2(72f, -2f), new Vector2(2.2f, 0.45f), new Vector2(0f, 2.8f), 1.15f);
 
         DeathTrap firstSpikes = CreateSpikes(props[5], new Vector2(9f, MainSurfaceY));
         CreateCrate(props[0], new Vector2(-2f, MainSurfaceY));
@@ -326,29 +334,28 @@ public static class UmbraPrototypeBuilder
         CreateExit(props[10], new Vector2(130f, MainSurfaceY));
     }
 
-    private static void BuildCavernsLevel(Sprite terrain, Sprite[] props)
+    private static void BuildLibraryLevel(Sprite terrain, Sprite[] props)
     {
-        CreateGroundRoute(terrain, "Caverns", new[]
+        CreateGroundRoute(terrain, "Library", new[]
         {
-            new Vector2(-4.5f, 9f), new Vector2(10f, 8f), new Vector2(24f, 8f),
-            new Vector2(38f, 9f), new Vector2(52f, 10f), new Vector2(67f, 10f),
+            new Vector2(-4.5f, 12f), new Vector2(10f, 12f), new Vector2(24f, 10f),
+            new Vector2(38f, 12f), new Vector2(52f, 12f), new Vector2(67f, 11f),
             new Vector2(82f, 10f), new Vector2(97f, 11f), new Vector2(113f, 15f),
             new Vector2(130f, 15f)
         });
-        CreateMovingPlatform("Cavern Lift A", terrain, new Vector2(2.5f, -2f), new Vector2(2.2f, 0.45f), new Vector2(0f, 2.8f), 1.05f);
-        CreateMovingPlatform("Cavern Bridge A", terrain, new Vector2(17f, -1.1f), new Vector2(2.2f, 0.45f), new Vector2(3.2f, 0.8f), 0.95f);
-        CreateMovingPlatform("Cavern Lift B", terrain, new Vector2(45f, -2f), new Vector2(2.2f, 0.45f), new Vector2(0f, 3f), 1.1f);
-        CreateMovingPlatform("Cavern Bridge B", terrain, new Vector2(74.5f, -1.1f), new Vector2(2.2f, 0.45f), new Vector2(3f, 0.9f), 0.9f);
-        CreateMovingPlatform("Cavern Lift C", terrain, new Vector2(104f, -2f), new Vector2(2.2f, 0.45f), new Vector2(0f, 3f), 1.15f);
-        CreateTerrain("Cavern Shelf A", terrain, new Vector2(24f, 0.35f), new Vector2(8f, 0.5f));
-        CreateTerrain("Cavern Shelf B", terrain, new Vector2(82f, 0.4f), new Vector2(8f, 0.5f));
-        CreateTerrain("Cavern Key Ledge", terrain, new Vector2(113f, 0.45f), new Vector2(9f, 0.5f));
+        CreateMovingPlatform("Book Lift A", terrain, new Vector2(2.5f, -2f), new Vector2(2.2f, 0.45f), new Vector2(0f, 2.8f), 1.05f);
+        CreateMovingPlatform("Rain Bridge A", terrain, new Vector2(17f, -1.1f), new Vector2(2.2f, 0.45f), new Vector2(3.2f, 0.8f), 0.95f);
+        CreateMovingPlatform("Book Lift B", terrain, new Vector2(45f, -2f), new Vector2(2.2f, 0.45f), new Vector2(0f, 3f), 1.1f);
+        CreateMovingPlatform("Rain Bridge B", terrain, new Vector2(74.5f, -1.1f), new Vector2(2.2f, 0.45f), new Vector2(3f, 0.9f), 0.9f);
+        CreateMovingPlatform("Book Lift C", terrain, new Vector2(104f, -2f), new Vector2(2.2f, 0.45f), new Vector2(0f, 3f), 1.15f);
+        CreateTerrain("Library Shelf A", terrain, new Vector2(24f, 0.35f), new Vector2(8f, 0.5f));
+        CreateTerrain("Library Shelf B", terrain, new Vector2(82f, 0.4f), new Vector2(8f, 0.5f));
+        CreateTerrain("Library Echo Ledge", terrain, new Vector2(113f, 0.45f), new Vector2(9f, 0.5f));
 
         CreateSaw(props[6], new Vector2(10f, -1.25f), new Vector2(2f, 0f), 1.35f);
         CreateLadder(props[4], new Vector2(19.4f, MainSurfaceY));
-        CreateSpikes(props[5], new Vector2(24f, SurfaceY(0.35f, 0.5f)));
+        CreateSpikes(props[5], new Vector2(27f, SurfaceY(0.35f, 0.5f)));
         CreateCheckpoint(props[2], new Vector2(36f, MainSurfaceY));
-        CreateSaw(props[6], new Vector2(52f, -1.15f), new Vector2(0f, 2.5f), 1.35f);
         CreateSpikes(props[5], new Vector2(67f, MainSurfaceY));
         CreateCheckpoint(props[2], new Vector2(92f, MainSurfaceY));
         CreateLadder(props[4], new Vector2(107.9f, MainSurfaceY));
@@ -358,20 +365,20 @@ public static class UmbraPrototypeBuilder
         CreateExit(props[10], new Vector2(131f, MainSurfaceY));
     }
 
-    private static void BuildEscapeLevel(Sprite terrain, Sprite[] props)
+    private static void BuildObservatoryLevel(Sprite terrain, Sprite[] props)
     {
-        CreateGroundRoute(terrain, "Escape", new[]
+        CreateGroundRoute(terrain, "Observatory", new[]
         {
             new Vector2(-3.5f, 11f), new Vector2(9f, 9f), new Vector2(22f, 9f),
             new Vector2(35f, 10f), new Vector2(49f, 10f), new Vector2(63f, 10f),
             new Vector2(77f, 10f), new Vector2(92f, 12f), new Vector2(109f, 16f),
             new Vector2(128f, 16f)
         });
-        CreateTerrain("Escape Upper A", terrain, new Vector2(27f, 0.2f), new Vector2(8f, 0.55f));
-        CreateTerrain("Escape Upper B", terrain, new Vector2(70f, 0.25f), new Vector2(9f, 0.55f));
-        CreateTerrain("Escape Key Route", terrain, new Vector2(108f, 0.3f), new Vector2(11f, 0.55f));
-        CreateMovingPlatform("Escape Bridge A", terrain, new Vector2(15.5f, -1.1f), new Vector2(2.2f, 0.45f), new Vector2(2.8f, 1f), 1.05f);
-        CreateMovingPlatform("Escape Elevator", terrain, new Vector2(84.5f, -2f), new Vector2(2.2f, 0.45f), new Vector2(0f, 3f), 1.1f);
+        CreateTerrain("Observatory Gallery A", terrain, new Vector2(27f, 0.2f), new Vector2(8f, 0.55f));
+        CreateTerrain("Observatory Gallery B", terrain, new Vector2(70f, 0.25f), new Vector2(9f, 0.55f));
+        CreateTerrain("Returning Echo Route", terrain, new Vector2(108f, 0.3f), new Vector2(11f, 0.55f));
+        CreateMovingPlatform("Constellation Bridge", terrain, new Vector2(15.5f, -1.1f), new Vector2(2.2f, 0.45f), new Vector2(2.8f, 1f), 1.05f);
+        CreateMovingPlatform("Observatory Lift", terrain, new Vector2(84.5f, -2f), new Vector2(2.2f, 0.45f), new Vector2(0f, 3f), 1.1f);
 
         DeathTrap spikesA = CreateSpikes(props[5], new Vector2(9f, MainSurfaceY));
         CreateCrate(props[0], new Vector2(-3f, MainSurfaceY));
@@ -479,10 +486,10 @@ public static class UmbraPrototypeBuilder
 
     private static GameObject CreateCrate(Sprite sprite, Vector2 position)
     {
-        GameObject box = CreateGroundedSpriteObject("Push Box", sprite, position.x, position.y, new Vector2(0.72f, 0.72f));
+        GameObject box = CreateGroundedSpriteObject("Memory Cube", sprite, position.x, position.y, new Vector2(0.60f, 0.60f));
         box.layer = LayerMask.NameToLayer("Ground");
         BoxCollider2D collider = box.AddComponent<BoxCollider2D>();
-        FitColliderFromBottom(collider, sprite, 0.88f, 0.94f);
+        FitColliderFromBottom(collider, sprite, 0.86f, 0.86f);
         Rigidbody2D body = box.AddComponent<Rigidbody2D>();
         body.mass = 3.2f;
         body.linearDamping = 1.5f;
@@ -496,7 +503,7 @@ public static class UmbraPrototypeBuilder
 
     private static PressureSwitch2D CreatePressureSwitch(Sprite sprite, Vector2 position, DeathTrap target)
     {
-        GameObject obj = CreateGroundedSpriteObject("Pressure Switch", sprite, position.x, position.y, new Vector2(0.72f, 0.45f));
+        GameObject obj = CreateGroundedSpriteObject("Resonance Pad", sprite, position.x, position.y, new Vector2(0.72f, 0.45f));
         BoxCollider2D collider = obj.AddComponent<BoxCollider2D>();
         collider.isTrigger = true;
         FitColliderFromBottom(collider, sprite, 0.9f, 0.75f);
@@ -509,7 +516,7 @@ public static class UmbraPrototypeBuilder
 
     private static void CreateCheckpoint(Sprite sprite, Vector2 position)
     {
-        GameObject obj = CreateGroundedSpriteObject("Checkpoint", sprite, position.x, position.y, new Vector2(0.72f, 0.72f));
+        GameObject obj = CreateGroundedSpriteObject("Echo Lantern", sprite, position.x, position.y, new Vector2(0.72f, 0.72f));
         BoxCollider2D collider = obj.AddComponent<BoxCollider2D>();
         collider.isTrigger = true;
         FitColliderFromBottom(collider, sprite, 0.62f, 0.92f);
@@ -524,7 +531,7 @@ public static class UmbraPrototypeBuilder
 
     private static void CreateLadder(Sprite sprite, Vector2 position)
     {
-        GameObject obj = CreateGroundedSpriteObject("Climb Zone", sprite, position.x, position.y, new Vector2(0.72f, 1.45f));
+        GameObject obj = CreateGroundedSpriteObject("Ribbon Ladder", sprite, position.x, position.y, new Vector2(0.72f, 1.45f));
         BoxCollider2D collider = obj.AddComponent<BoxCollider2D>();
         collider.isTrigger = true;
         FitColliderFromBottom(collider, sprite, 0.68f, 0.96f);
@@ -534,7 +541,7 @@ public static class UmbraPrototypeBuilder
 
     private static DeathTrap CreateSpikes(Sprite sprite, Vector2 position)
     {
-        GameObject obj = CreateGroundedSpriteObject("Spike Trap", sprite, position.x, position.y, new Vector2(1.05f, 0.58f));
+        GameObject obj = CreateGroundedSpriteObject("Thorn Knot", sprite, position.x, position.y, new Vector2(1.05f, 0.58f));
         BoxCollider2D collider = obj.AddComponent<BoxCollider2D>();
         collider.isTrigger = true;
         FitColliderFromBottom(collider, sprite, 0.92f, 0.82f);
@@ -545,7 +552,7 @@ public static class UmbraPrototypeBuilder
 
     private static DeathTrap CreateSaw(Sprite sprite, Vector2 position, Vector2 offset, float speed)
     {
-        GameObject obj = CreateTriggerObject("Moving Saw", sprite, position, new Vector2(0.58f, 0.58f));
+        GameObject obj = CreateTriggerObject("Clockwork Hazard", sprite, position, new Vector2(0.58f, 0.58f));
         obj.GetComponent<BoxCollider2D>().size = new Vector2(1.2f, 1.2f);
         DeathTrap trap = obj.AddComponent<DeathTrap>();
         SimpleMover2D mover = obj.AddComponent<SimpleMover2D>();
@@ -557,7 +564,7 @@ public static class UmbraPrototypeBuilder
 
     private static void CreateLever(Sprite sprite, Vector2 position, DeathTrap target)
     {
-        GameObject obj = CreateGroundedSpriteObject("Lever", sprite, position.x, position.y, new Vector2(0.52f, 0.52f));
+        GameObject obj = CreateGroundedSpriteObject("Tuning Fork", sprite, position.x, position.y, new Vector2(0.52f, 0.52f));
         BoxCollider2D collider = obj.AddComponent<BoxCollider2D>();
         collider.isTrigger = true;
         FitColliderFromBottom(collider, sprite, 0.8f, 0.94f);
@@ -570,7 +577,7 @@ public static class UmbraPrototypeBuilder
 
     private static void CreateKey(Sprite sprite, Vector2 position)
     {
-        GameObject obj = CreateTriggerObject("Key", sprite, position, new Vector2(0.42f, 0.42f));
+        GameObject obj = CreateTriggerObject("Echo Shard", sprite, position, new Vector2(0.42f, 0.42f));
         obj.GetComponent<BoxCollider2D>().size = new Vector2(3.2f, 3.2f);
         obj.AddComponent<CollectKey>();
         obj.AddComponent<CollectibleFloat2D>();
@@ -579,7 +586,7 @@ public static class UmbraPrototypeBuilder
 
     private static void CreateDoor(Sprite sprite, Vector2 position)
     {
-        GameObject obj = CreateGroundedSpriteObject("Locked Door", sprite, position.x, position.y, new Vector2(1.05f, 1.05f));
+        GameObject obj = CreateGroundedSpriteObject("Memory Threshold", sprite, position.x, position.y, new Vector2(1.05f, 1.05f));
         BoxCollider2D collider = obj.AddComponent<BoxCollider2D>();
         FitColliderFromBottom(collider, sprite, 0.76f, 0.96f);
         obj.AddComponent<DoorGoal>();
@@ -588,7 +595,7 @@ public static class UmbraPrototypeBuilder
 
     private static void CreateExit(Sprite sprite, Vector2 position)
     {
-        GameObject obj = CreateGroundedSpriteObject("Finish Zone", sprite, position.x, position.y, new Vector2(1.05f, 1.05f));
+        GameObject obj = CreateGroundedSpriteObject("Return Portal", sprite, position.x, position.y, new Vector2(1.05f, 1.05f));
         BoxCollider2D collider = obj.AddComponent<BoxCollider2D>();
         collider.isTrigger = true;
         FitColliderFromBottom(collider, sprite, 0.68f, 0.92f);
@@ -630,14 +637,14 @@ public static class UmbraPrototypeBuilder
             ValidateObject<PlayerRespawn>("Player", prefix, errors);
             ValidateObject<PlayerSpriteAnimator>("Player", prefix, errors);
             ValidateObject<CameraFollow2D>("Main Camera", prefix, errors);
-            ValidateObject<Checkpoint>("Checkpoint", prefix, errors);
-            ValidateObject<CollectKey>("Key", prefix, errors);
-            ValidateObject<DoorGoal>("Locked Door", prefix, errors);
-            ValidateObject<FinishZone>("Finish Zone", prefix, errors);
+            ValidateObject<Checkpoint>("Echo Lantern", prefix, errors);
+            ValidateObject<CollectKey>("Echo Shard", prefix, errors);
+            ValidateObject<DoorGoal>("Memory Threshold", prefix, errors);
+            ValidateObject<FinishZone>("Return Portal", prefix, errors);
             ValidateVisibleSprite("Terrain Start", prefix, errors);
-            ValidateVisibleSprite("Key", prefix, errors);
-            ValidateVisibleSprite("Locked Door", prefix, errors);
-            ValidateVisibleSprite("Finish Zone", prefix, errors);
+            ValidateVisibleSprite("Echo Shard", prefix, errors);
+            ValidateVisibleSprite("Memory Threshold", prefix, errors);
+            ValidateVisibleSprite("Return Portal", prefix, errors);
 
             Checkpoint[] checkpoints = Object.FindObjectsByType<Checkpoint>();
             FinishZone finish = Object.FindAnyObjectByType<FinishZone>();
@@ -706,9 +713,9 @@ public static class UmbraPrototypeBuilder
                 errors.Add(prefix + "needs at least one visible danger plus the fall detector.");
             }
 
-            ValidatePropSprite("Key", prefix, errors);
-            ValidatePropSprite("Locked Door", prefix, errors);
-            ValidatePropSprite("Finish Zone", prefix, errors);
+            ValidatePropSprite("Echo Shard", prefix, errors);
+            ValidatePropSprite("Memory Threshold", prefix, errors);
+            ValidatePropSprite("Return Portal", prefix, errors);
             ValidateGroundedGameplayObjects(prefix, errors);
         }
 
@@ -829,7 +836,7 @@ public static class UmbraPrototypeBuilder
         GameObject obj = GameObject.Find(objectName);
         SpriteRenderer renderer = obj != null ? obj.GetComponent<SpriteRenderer>() : null;
         string path = renderer != null && renderer.sprite != null ? AssetDatabase.GetAssetPath(renderer.sprite) : string.Empty;
-        if (!path.Contains("/Props/Frames/"))
+        if (!path.Contains("/Props/EchoFrames/"))
         {
             errors.Add(prefix + objectName + " is still using placeholder art.");
         }
@@ -843,11 +850,11 @@ public static class UmbraPrototypeBuilder
         foreach (SpriteRenderer renderer in renderers)
         {
             string objectName = renderer.gameObject.name;
-            bool shouldBeGrounded = objectName == "Push Box" || objectName == "Pressure Switch" ||
-                objectName == "Checkpoint" || objectName == "Climb Zone" ||
-                objectName == "Spike Trap" || objectName == "Lever" ||
-                objectName == "Locked Door" || objectName == "Finish Zone" ||
-                objectName.StartsWith("Ruined Pillar", System.StringComparison.Ordinal);
+            bool shouldBeGrounded = objectName == "Memory Cube" || objectName == "Resonance Pad" ||
+                objectName == "Echo Lantern" || objectName == "Ribbon Ladder" ||
+                objectName == "Thorn Knot" || objectName == "Tuning Fork" ||
+                objectName == "Memory Threshold" || objectName == "Return Portal" ||
+                objectName.StartsWith("Memory Tablet", System.StringComparison.Ordinal);
             if (!shouldBeGrounded)
             {
                 continue;
@@ -896,45 +903,13 @@ public static class UmbraPrototypeBuilder
 
     private static Sprite CreateTerrainSprite()
     {
-        const int width = 256;
-        const int height = 64;
-        const string path = "Assets/Art/terrain_forest_tile.png";
-        Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
-        Color clear = new Color(0f, 0f, 0f, 0f);
-        Color soil = new Color(0.055f, 0.055f, 0.065f, 1f);
-        Color edge = new Color(0.16f, 0.16f, 0.18f, 1f);
-        var random = new System.Random(UMBRAHash());
-
-        for (int x = 0; x < width; x++)
+        const string path = "Assets/Art/Terrain/echo_terrain_tile.png";
+        if (!File.Exists(path))
         {
-            int top = 48 + (int)(Mathf.Sin(x * 0.17f) * 3f) + random.Next(-2, 3);
-            for (int y = 0; y < height; y++)
-            {
-                if (y > top)
-                {
-                    texture.SetPixel(x, y, clear);
-                }
-                else if (y > top - 4)
-                {
-                    texture.SetPixel(x, y, edge);
-                }
-                else
-                {
-                    float variation = random.Next(-5, 6) / 255f;
-                    texture.SetPixel(x, y, new Color(soil.r + variation, soil.g + variation, soil.b + variation, 1f));
-                }
-            }
+            throw new System.Exception("Required terrain asset is missing: " + path);
         }
 
-        texture.Apply();
-        File.WriteAllBytes(path, texture.EncodeToPNG());
-        Object.DestroyImmediate(texture);
         return ImportSingleSprite(path, 64f, true);
-    }
-
-    private static int UMBRAHash()
-    {
-        return 8217;
     }
 
     private static Sprite LoadSpriteAsset(string path, float pixelsPerUnit)

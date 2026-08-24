@@ -135,7 +135,22 @@ public class PlayerController2D : MonoBehaviour
         float control = IsGrounded ? 1f : airControl;
         float rate = Mathf.Abs(targetSpeed) > 0.01f ? acceleration : deceleration;
         float nextSpeed = Mathf.MoveTowards(rb.linearVelocity.x, targetSpeed, rate * control * Time.fixedDeltaTime);
-        rb.linearVelocity = new Vector2(nextSpeed, rb.linearVelocity.y);
+        float verticalSpeed = rb.linearVelocity.y;
+        if (!IsGrounded && IsTouchingWall() && verticalSpeed > -1.2f)
+        {
+            verticalSpeed = -1.2f;
+        }
+
+        rb.linearVelocity = new Vector2(nextSpeed, verticalSpeed);
+    }
+
+    private bool IsTouchingWall()
+    {
+        Bounds bounds = bodyCollider.bounds;
+        float distance = bounds.extents.x + 0.08f;
+        Vector2 center = bounds.center;
+        return Physics2D.Raycast(center, Vector2.left, distance, groundLayer) ||
+            Physics2D.Raycast(center, Vector2.right, distance, groundLayer);
     }
 
     public void EnterClimbZone(ClimbZone2D zone)

@@ -3,6 +3,31 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    private static readonly string[] LevelNames =
+    {
+        "EL JARDIN DE LAS PRIMERAS VOCES",
+        "LA CIUDAD DE LAS CARTAS NO ENVIADAS",
+        "EL TALLER DE LAS HORAS PRESTADAS",
+        "LA BIBLIOTECA BAJO LA LLUVIA",
+        "EL OBSERVATORIO DE LOS ECOS QUE REGRESAN"
+    };
+    private static readonly string[] MemoryStages =
+    {
+        "INFANCIA",
+        "ADOLESCENCIA",
+        "ADULTEZ",
+        "VEJEZ",
+        "ACEPTACION"
+    };
+    private static readonly Color[] ChapterColors =
+    {
+        new Color(0.18f, 0.78f, 0.74f),
+        new Color(0.88f, 0.32f, 0.52f),
+        new Color(0.95f, 0.62f, 0.18f),
+        new Color(0.34f, 0.62f, 0.92f),
+        new Color(0.62f, 0.43f, 0.92f)
+    };
+
     public static GameManager Instance { get; private set; }
 
     public bool hasKey;
@@ -17,9 +42,14 @@ public class GameManager : MonoBehaviour
 
     private PlayerRespawn pendingRespawn;
     private float deathTimer;
+    private float echoMessageTimer;
     private int sceneIndex;
 
     private string KeySaveName => "UmbraHasKey_" + sceneIndex;
+    private int ChapterIndex => Mathf.Clamp(LevelNumber - 1, 0, LevelNames.Length - 1);
+    private string LevelTitle => LevelNames[ChapterIndex];
+    private string MemoryStage => MemoryStages[ChapterIndex];
+    private Color ChapterColor => ChapterColors[ChapterIndex];
 
     private void Awake()
     {
@@ -54,6 +84,11 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
+        if (echoMessageTimer > 0f)
+        {
+            echoMessageTimer -= Time.unscaledDeltaTime;
+        }
+
         if (!gameStarted && (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space)))
         {
             gameStarted = true;
@@ -99,6 +134,7 @@ public class GameManager : MonoBehaviour
     public void CollectKey()
     {
         hasKey = true;
+        echoMessageTimer = 2.2f;
         PlayerPrefs.SetInt(KeySaveName, 1);
         PlayerPrefs.Save();
         UmbraAudio.Instance?.PlayPickup();
@@ -177,7 +213,7 @@ public class GameManager : MonoBehaviour
     {
         GUIStyle small = new GUIStyle(GUI.skin.label);
         small.fontSize = 16;
-        small.normal.textColor = new Color(0.9f, 0.9f, 0.88f);
+        small.normal.textColor = new Color(1f, 0.97f, 0.84f);
 
         GUIStyle centered = new GUIStyle(small);
         centered.alignment = TextAnchor.MiddleCenter;
@@ -186,23 +222,37 @@ public class GameManager : MonoBehaviour
 
         if (gameStarted && !finishedGame)
         {
-            GUI.Label(new Rect(20, 18, 180, 28), hasKey ? "LLAVE [X]" : "LLAVE [ ]", small);
-            GUI.Label(new Rect(Screen.width - 140, 18, 120, 28), "NIVEL " + LevelNumber + "/" + TotalLevels, small);
+            GUI.Label(new Rect(20, 18, 230, 28), hasKey ? "FRAGMENTO DE ECO [X]" : "FRAGMENTO DE ECO [ ]", small);
+            GUI.Label(new Rect(Screen.width - 210, 18, 190, 28), "RECUERDO " + LevelNumber + "/" + TotalLevels, small);
+        }
+
+        if (echoMessageTimer > 0f)
+        {
+            float pulse = Mathf.Clamp01(echoMessageTimer / 2.2f);
+            Color previous = GUI.color;
+            GUI.color = new Color(ChapterColor.r, ChapterColor.g, ChapterColor.b, 0.12f * pulse);
+            GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.color = previous;
+            centered.fontSize = 20;
+            GUI.Label(new Rect((Screen.width - 360f) * 0.5f, 70f, 360f, 42f), "ECO RECUPERADO", centered);
         }
 
         if (!gameStarted)
         {
-            DrawPanel(460f, 180f);
-            GUI.Label(CenteredRect(-60f, 420f, 50f), "UMBRA", centered);
-            centered.fontSize = 16;
+            DrawPanel(620f, 245f);
+            GUI.Label(CenteredRect(-92f, 560f, 48f), "UMBRA", centered);
+            centered.fontSize = 18;
+            GUI.Label(CenteredRect(-49f, 560f, 34f), "EL ARCHIVO DE LOS ECOS", centered);
+            centered.fontSize = 15;
             centered.fontStyle = FontStyle.Normal;
-            GUI.Label(CenteredRect(-5f, 420f, 32f), "NIVEL " + LevelNumber, centered);
-            GUI.Label(CenteredRect(40f, 420f, 32f), "ENTER", centered);
+            GUI.Label(CenteredRect(-3f, 560f, 30f), "RECUERDO " + LevelNumber + " - " + MemoryStage, centered);
+            GUI.Label(CenteredRect(27f, 580f, 34f), LevelTitle, centered);
+            GUI.Label(CenteredRect(73f, 560f, 30f), "ENTER", centered);
         }
 
         if (isPaused)
         {
-            DrawPanel(460f, 165f);
+            DrawPanel(500f, 165f);
             GUI.Label(CenteredRect(-48f, 420f, 45f), "PAUSA", centered);
             centered.fontSize = 16;
             centered.fontStyle = FontStyle.Normal;
@@ -217,17 +267,18 @@ public class GameManager : MonoBehaviour
 
         if (finishedGame && LevelNumber < TotalLevels)
         {
-            DrawPanel(500f, 180f);
-            GUI.Label(CenteredRect(-55f, 460f, 45f), "NIVEL " + LevelNumber + " COMPLETADO", centered);
+            DrawPanel(560f, 195f);
+            GUI.Label(CenteredRect(-65f, 520f, 45f), "RECUERDO RECUPERADO", centered);
             centered.fontSize = 16;
             centered.fontStyle = FontStyle.Normal;
-            GUI.Label(CenteredRect(25f, 460f, 35f), "ENTER - SIGUIENTE NIVEL", centered);
+            GUI.Label(CenteredRect(-12f, 520f, 34f), LevelTitle, centered);
+            GUI.Label(CenteredRect(42f, 520f, 35f), "ENTER - SIGUIENTE RECUERDO", centered);
         }
 
         if (finishedGame && LevelNumber == TotalLevels)
         {
             DrawPanel(560f, 350f);
-            GUI.Label(CenteredRect(-145f, 520f, 45f), "ESCAPASTE DE UMBRA", centered);
+            GUI.Label(CenteredRect(-145f, 520f, 45f), "ARCHIVO RECONSTRUIDO", centered);
             centered.fontSize = 15;
             centered.fontStyle = FontStyle.Normal;
             GUI.Label(CenteredRect(-82f, 520f, 30f), "CREDITOS", centered);
@@ -241,9 +292,15 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private static void DrawPanel(float width, float height)
+    private void DrawPanel(float width, float height)
     {
-        GUI.Box(new Rect((Screen.width - width) * 0.5f, (Screen.height - height) * 0.5f, width, height), "");
+        Rect panel = new Rect((Screen.width - width) * 0.5f, (Screen.height - height) * 0.5f, width, height);
+        Color previous = GUI.color;
+        GUI.color = new Color(0.035f, 0.075f, 0.09f, 0.92f);
+        GUI.DrawTexture(panel, Texture2D.whiteTexture);
+        GUI.color = ChapterColor;
+        GUI.DrawTexture(new Rect(panel.x, panel.y, panel.width, 5f), Texture2D.whiteTexture);
+        GUI.color = previous;
     }
 
     private static Rect CenteredRect(float verticalOffset, float width, float height)

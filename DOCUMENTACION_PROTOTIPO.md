@@ -1,34 +1,50 @@
-# UMBRA - Documentacion del prototipo
+# UMBRA: El Archivo de los Ecos - Documentacion
 
 ## Alcance actual
 
-El proyecto actual contiene cinco niveles jugables conectados y cubre el alcance
-de niveles descrito para UMBRA.
+El proyecto contiene cinco niveles jugables conectados. Se conserva el alcance
+del documento inicial: plataformas 2D, exploracion, acertijos ambientales y un
+recorrido simbolico por las etapas de la vida.
+
+## Idea propia
+
+Lumo despierta dentro de un archivo de recuerdos incompletos. Cada mundo esta
+hecho con materiales artesanales y representa una etapa distinta. El objetivo no
+es escapar de un bosque oscuro, sino reconstruir la memoria: activar mecanismos
+de resonancia, recuperar un fragmento de eco y atravesar el portal de regreso.
 
 ## Flujo jugable
 
-1. Bosque: caja, interruptor, pinchos, escalera y llave.
-2. Ruinas: plataformas moviles, palanca y rutas elevadas.
-3. Fabrica: tunel agachado, sierras y pasarela industrial.
-4. Cavernas: ascensores, abismos y plataformas de precision.
-5. Escape: combina caja, interruptor, palanca, trampas y salida final.
+1. Jardin de las Primeras Voces: infancia, juego y primeras decisiones.
+2. Ciudad de las Cartas No Enviadas: adolescencia y palabras pendientes.
+3. Taller de las Horas Prestadas: adultez, trabajo y paso del tiempo.
+4. Biblioteca Bajo la Lluvia: vejez, recuerdos ordenados y olvidados.
+5. Observatorio de los Ecos que Regresan: aceptacion y cierre del archivo.
 
 ## Scripts principales
 
 - `PlayerController2D`: caminar, saltar, agacharse, trepar e interactuar.
-- `PushPullObject2D`: jalar la caja cercana mientras se mantiene `E`.
-- `PressureSwitch2D`: desactivar la trampa cuando la caja esta encima.
+- `PushPullObject2D`: mover los cubos de memoria sin aceleraciones bruscas.
+- `PressureSwitch2D`: activar una placa de resonancia con un cubo.
 - `PlayerRespawn` y `Checkpoint`: muerte, reaparicion y guardado automatico.
 - `GameManager`: menu, pausa, progreso, muerte, final y reinicio.
-- `UmbraAudio`: viento y efectos generados en tiempo de ejecucion.
+- `UmbraAudio`: ambiente armonico y efectos generados en tiempo de ejecucion.
 - `UmbraPrototypeBuilder`: construccion y validacion automatica de cinco escenas.
 - `UmbraRuntimeDiagnostics`: prueba automatica de referencias en los cinco niveles.
 
 ## Arte y audio
 
-Los cinco fondos, el personaje y la hoja de doce objetos son recursos originales
-del prototipo. El terreno usa una textura irregular repetible y el audio se genera
-por codigo para mantener el proyecto gratuito y autocontenido.
+Los cinco fondos, Lumo y la hoja de doce objetos fueron creados para esta version.
+La direccion mezcla gouache, papel recortado, tela cosida y ceramica. El terreno
+usa una textura repetible y el audio se genera por codigo para mantener el proyecto
+gratuito y autocontenido.
+
+## Diferenciacion
+
+La referencia a Limbo se limita al genero de plataformas narrativas con acertijos
+ambientales. UMBRA evita su silueta infantil, el bosque monocromatico y la busqueda
+de una salida. En su lugar usa un protagonista enmascarado de tela, color, cinco
+recuerdos materiales y una meta centrada en reconstruir y aceptar la memoria.
 
 ## Ejecucion
 

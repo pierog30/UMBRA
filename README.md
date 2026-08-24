@@ -1,9 +1,11 @@
-# UMBRA - Prototipo Unity 2D
+# UMBRA: El Archivo de los Ecos
 
-Prototipo inicial para el curso de Diseno y Desarrollo de Juegos Interactivos II.
+Videojuego 2D para el curso de Diseno y Desarrollo de Juegos Interactivos II.
 
-La idea es mantenerlo con nivel de estudiante avanzado: scripts cortos, objetos simples,
-arte propio sencillo y una escena entendible para poder explicarla en clase.
+La propuesta sigue a Lumo, un viajero de tela con una luz en el pecho que recorre
+recuerdos construidos con papel, ceramica y objetos cosidos. La atmosfera de los
+plataformeros narrativos es una referencia general, pero la historia, el personaje,
+la paleta, los objetos y el mundo visual son propios del proyecto.
 
 ## Como abrirlo
 
@@ -19,11 +21,11 @@ arte propio sencillo y una escena entendible para poder explicarla en clase.
 - `A/D` o flechas: moverse.
 - `Space`, `W` o flecha arriba: saltar.
 - `S` o flecha abajo: agacharse.
-- Empuja la caja caminando contra ella; manten `E` para jalarla.
+- Empuja el cubo de memoria caminando contra el; manten `E` para jalarlo.
 - `W/S` o flechas verticales: trepar cuando estas sobre la escalera.
 - `Esc`: pausar o continuar.
-- Toca el checkpoint para actualizar el punto de respawn en los niveles largos.
-- Toma la llave para abrir la puerta.
+- Toca un farol de eco para actualizar el punto de reaparicion.
+- Recupera el fragmento de eco para abrir el umbral de memoria.
 - Evita las trampas.
 - `R`: recargar el nivel desde el ultimo checkpoint y restaurar cajas, trampas y mecanismos.
 
@@ -31,30 +33,38 @@ arte propio sencillo y una escena entendible para poder explicarla en clase.
 
 - Movimiento 2D basico con `Rigidbody2D`.
 - Salto y deteccion de suelo.
-- Caja empujable.
-- Caja que puede empujarse y jalarse con `E`.
-- Interruptor de presion conectado a una trampa.
-- Zona trepable.
-- Trampa de pinchos.
-- Checkpoint.
-- Guardado automatico del checkpoint y la llave con `PlayerPrefs`.
-- Llave y puerta.
-- Cinco niveles conectados: bosque, ruinas, fabrica, cavernas y escape.
+- Cubos de memoria que se pueden empujar y jalar con `E`.
+- Placas de resonancia y diapasones conectados a peligros.
+- Escaleras de cintas, nudos de espinas y engranajes moviles.
+- Faroles de eco que funcionan como checkpoints.
+- Guardado automatico del farol y del fragmento con `PlayerPrefs`.
+- Fragmentos de eco, umbrales de memoria y portales de regreso.
+- Cinco recuerdos conectados: jardin, ciudad de cartas, taller de horas,
+  biblioteca bajo la lluvia y observatorio.
 - Progresion automatica de un nivel al siguiente.
 - Meta final y creditos completos al terminar el nivel 5.
 - Menu inicial, pausa, muerte/reinicio rapido y creditos.
-- Viento y ambiente grave continuo, con efectos audibles de pasos, salto, llave, mecanismos y muerte.
+- Ambiente musical generado por codigo y efectos de pasos, salto, eco, mecanismos y caida.
 - Camara que sigue al jugador.
-- Estetica monocromatica atmosferica inspirada en juegos de siluetas.
-- Cinco fondos originales y objetos ilustrados coherentes.
-- Spritesheet de 12 cuadros para quieto, carrera, salto y agachado.
-- Llave ilustrada con movimiento flotante.
+- Estetica de collage artesanal con papel, tela, ceramica y color.
+- Cinco fondos originales, una hoja de objetos y terreno cosido.
+- Lumo cuenta con 12 cuadros para quieto, carrera, salto y agachado.
+- Al recoger un fragmento aparece un pulso de color y el mensaje `ECO RECUPERADO`.
+
+## Los cinco recuerdos
+
+1. El Jardin de las Primeras Voces - infancia.
+2. La Ciudad de las Cartas No Enviadas - adolescencia.
+3. El Taller de las Horas Prestadas - adultez.
+4. La Biblioteca Bajo la Lluvia - vejez.
+5. El Observatorio de los Ecos que Regresan - aceptacion.
 
 ## Relacion con el PDF
 
-Esta entrega cubre los 5 niveles del alcance planteado. Incluye mecanicas base,
-acertijos ambientales, trampas, arte propio, audio, guardado por escena y el ciclo
-completo desde el nivel 1 hasta los creditos del nivel 5.
+Esta entrega mantiene los lineamientos del avance: desplazamiento lateral,
+exploracion, acertijos ambientales, cinco etapas de vida y un cierre sobre la
+aceptacion. La identidad del Archivo de los Ecos desarrolla esos puntos con una
+direccion propia y evita depender de la apariencia de otro juego.
 
 ## Siguiente paso recomendado
 

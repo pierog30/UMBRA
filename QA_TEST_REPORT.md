@@ -1,6 +1,6 @@
 # UMBRA - Reporte de pruebas QA
 
-Fecha: 21 de agosto de 2026
+Fecha: 24 de agosto de 2026
 Motor: Unity 6000.5.2f1
 Plataforma: Windows 64 bits
 
@@ -16,13 +16,13 @@ excepciones durante las pruebas automaticas realizadas.
 - Renderizado visual del inicio, mitad y final de cada nivel (15 capturas).
 - Build para Windows con resultado `Success`.
 - Se repitio la carga de los cinco niveles para comprobar su estabilidad.
-- Comprobacion de jugador, camara, checkpoint, llave, puerta y salida.
+- Comprobacion de jugador, camara, farol, fragmento, umbral y portal.
 - Comprobacion de colliders solidos y triggers.
 - Comprobacion de trampas, palancas, placas y plataformas moviles.
 - Comprobacion de dos checkpoints y una ruta extendida por nivel.
 - Comprobacion de que la meta esta despues de la coordenada X 118.
-- Comprobacion automatica de apoyo en terreno para cajas, placas, llaves,
-  checkpoints, puertas, salidas y decoraciones de suelo.
+- Comprobacion automatica de apoyo en terreno para cubos, placas, faroles,
+  umbrales, portales y decoraciones de suelo.
 - Prueba fisica de caida junto a una pared en cada nivel.
 - Prueba del limite de velocidad y frenado automatico de las cajas.
 - Prueba de ritmo: la caja debe recorrer entre 2.8 y 4.3 unidades al empujarla durante un segundo.
@@ -30,10 +30,12 @@ excepciones durante las pruebas automaticas realizadas.
 - Verificacion de friccion cero, gravedad, interpolacion y valores finitos.
 - Verificacion de un unico `AudioListener` y amplitud audible en el ambiente.
 - Captura del primer frame del ejecutable para descartar una ventana vacia.
+- Tres recorridos automaticos completos desde el recuerdo 1 hasta el 5.
 
 ## Resultados medidos
 
-- Cargas de nivel: completadas correctamente.
+- Prueba de estabilidad: 10 ciclos y 50 cargas de nivel completadas.
+- Recorridos completos: 3 de 3.
 - Fallos del test: 0.
 - Errores de compilacion: 0.
 - Advertencias de compilacion: 0.
