@@ -15,8 +15,7 @@ excepciones durante las pruebas automaticas realizadas.
 - Validacion de las cinco escenas incluidas en Build Settings.
 - Renderizado visual del inicio, mitad y final de cada nivel (15 capturas).
 - Build para Windows con resultado `Success`.
-- 200 ciclos completos de carga de los cinco niveles.
-- 1,000 cargas de nivel verificadas dentro del ejecutable.
+- Se repitio la carga de los cinco niveles para comprobar su estabilidad.
 - Comprobacion de jugador, camara, checkpoint, llave, puerta y salida.
 - Comprobacion de colliders solidos y triggers.
 - Comprobacion de trampas, palancas, placas y plataformas moviles.
