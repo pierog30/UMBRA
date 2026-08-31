@@ -26,6 +26,9 @@ de resonancia, recuperar un fragmento de eco y atravesar el portal de regreso.
 - `PlayerController2D`: caminar, saltar, agacharse, trepar e interactuar.
 - `PushPullObject2D`: mover los cubos de memoria sin aceleraciones bruscas.
 - `PressureSwitch2D`: activar una placa de resonancia con un cubo.
+- `ResonanceLink2D`: comunicar visualmente que trampa pertenece a cada placa.
+- `VisualPulse2D`: destacar objetos interactivos sin cambiar su mecanica.
+- `DoorGoal`: controlar el umbral alto, su color y el bloqueo por fragmento.
 - `PlayerRespawn` y `Checkpoint`: muerte, reaparicion y guardado automatico.
 - `GameManager`: menu, pausa, progreso, muerte, final y reinicio.
 - `UmbraAudio`: ambiente armonico y efectos generados en tiempo de ejecucion.
@@ -38,6 +41,11 @@ Los cinco fondos, Lumo y la hoja de doce objetos fueron creados para esta versio
 La direccion mezcla gouache, papel recortado, tela cosida y ceramica. El terreno
 usa una textura repetible y el audio se genera por codigo para mantener el proyecto
 gratuito y autocontenido.
+
+Las interacciones usan un lenguaje de color sencillo: naranja indica un mecanismo
+pendiente y turquesa indica que ya fue activado. Las escaleras tienen una baliza
+luminosa, los cubos y fragmentos poseen contorno pulsante y las trampas se retraen
+de forma visible en vez de desaparecer.
 
 ## Diferenciacion
 

@@ -8,6 +8,7 @@ public class DeathTrap : MonoBehaviour
     private SpriteRenderer trapRenderer;
     private SimpleMover2D mover;
     private Color armedColor;
+    private Vector3 armedScale;
 
     private void Awake()
     {
@@ -15,6 +16,7 @@ public class DeathTrap : MonoBehaviour
         trapRenderer = GetComponent<SpriteRenderer>();
         mover = GetComponent<SimpleMover2D>();
         armedColor = trapRenderer != null ? trapRenderer.color : Color.white;
+        armedScale = transform.localScale;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -48,7 +50,14 @@ public class DeathTrap : MonoBehaviour
         {
             trapRenderer.color = armed
                 ? armedColor
-                : new Color(armedColor.r, armedColor.g, armedColor.b, 0.28f);
+                : new Color(0.48f, 0.95f, 0.84f, 0.72f);
+        }
+
+        if (mover == null)
+        {
+            transform.localScale = armed
+                ? armedScale
+                : new Vector3(armedScale.x, armedScale.y * 0.32f, armedScale.z);
         }
     }
 }

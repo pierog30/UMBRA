@@ -1,6 +1,6 @@
 # UMBRA - Reporte de pruebas QA
 
-Fecha: 24 de agosto de 2026
+Fecha: 31 de agosto de 2026
 Motor: Unity 6000.5.2f1
 Plataforma: Windows 64 bits
 
@@ -19,6 +19,10 @@ excepciones durante las pruebas automaticas realizadas.
 - Comprobacion de jugador, camara, farol, fragmento, umbral y portal.
 - Comprobacion de colliders solidos y triggers.
 - Comprobacion de trampas, palancas, placas y plataformas moviles.
+- Comprobacion de que las trampas desactivadas se retraen, siguen visibles y pueden rearmarse.
+- Comprobacion de resaltado para cubos, fragmentos, placas y escaleras.
+- Comprobacion de una linea visual entre cada placa de resonancia y su trampa.
+- Comprobacion de un umbral solido de mas de siete unidades de altura para impedir saltarlo.
 - Comprobacion de dos checkpoints y una ruta extendida por nivel.
 - Comprobacion de que la meta esta despues de la coordenada X 118.
 - Comprobacion automatica de apoyo en terreno para cubos, placas, faroles,
@@ -29,8 +33,8 @@ excepciones durante las pruebas automaticas realizadas.
 - Verificacion del reinicio completo de escena conservando el checkpoint.
 - Verificacion de friccion cero, gravedad, interpolacion y valores finitos.
 - Verificacion de un unico `AudioListener` y amplitud audible en el ambiente.
-- Captura del primer frame del ejecutable para descartar una ventana vacia.
-- Tres recorridos automaticos completos desde el recuerdo 1 hasta el 5.
+- Tres recorridos automaticos completos en Play Mode desde el recuerdo 1 hasta el 5.
+- Segunda ronda de 50 cargas despues de ajustar la dificultad del nivel 5.
 
 ## Resultados medidos
 
@@ -46,10 +50,15 @@ excepciones durante las pruebas automaticas realizadas.
 - Capturas visuales revisadas: 15 de 15.
 - Niveles con dos checkpoints: 5 de 5.
 - Niveles con longitud extendida: 5 de 5.
+- Recorridos finales del nivel 5: tres aprobados, una caida y cero reinicios en cada uno.
+- Build de Windows: `Success`.
 
 ## Riesgo restante
 
-La automatizacion verifica estabilidad, configuracion, longitud y fisica base.
+La automatizacion verifica estabilidad, configuracion, longitud, legibilidad y fisica base.
 Los niveles apuntan a unos cinco minutos en una primera partida, pero el tiempo
 exacto cambia segun la habilidad del jugador. El balance de dificultad y la
 comodidad de cada salto deben seguir evaluandose mediante playtests humanos.
+La politica de Control de aplicaciones de este equipo bloqueo el inicio directo
+del `.exe`, por lo que los recorridos finales se realizaron dentro del Play Mode
+de Unity con las mismas escenas, scripts y fisica compilada.

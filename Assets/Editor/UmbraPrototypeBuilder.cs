@@ -8,13 +8,13 @@ using UnityEngine.Rendering;
 public static class UmbraPrototypeBuilder
 {
     private const string MarkerPath = "Assets/UMBRA_SETUP_DONE.txt";
-    private const string SetupVersion = "UMBRA Archive of Echoes build v15";
+    private const string SetupVersion = "UMBRA Archive of Echoes build v17";
     private const float MainGroundY = -2.65f;
     private const float MainGroundHeight = 0.8f;
     private const float MainSurfaceY = MainGroundY + (MainGroundHeight * 0.28f);
     private const float PlayerGroundOffset = 0.74f;
     private const float MinimumGoalX = 118f;
-    private const float RouteWidthForgiveness = 2f;
+    private const float RouteWidthForgiveness = 3.2f;
     private static readonly string[] ScenePaths =
     {
         "Assets/Scenes/Level_01_Forest.unity",
@@ -31,6 +31,7 @@ public static class UmbraPrototypeBuilder
         new Color(0.18f, 0.38f, 0.62f),
         new Color(0.35f, 0.24f, 0.64f)
     };
+    private static Sprite highlightSprite;
 
     [InitializeOnLoadMethod]
     private static void AutoBuildOnce()
@@ -56,6 +57,7 @@ public static class UmbraPrototypeBuilder
 
         Sprite hidden = CreateColorSprite("hidden_square", new Color(0.02f, 0.02f, 0.025f, 1f));
         Sprite paper = CreateColorSprite("paper_square", new Color(0.95f, 0.9f, 0.72f, 1f));
+        highlightSprite = paper;
         Sprite[] backgrounds =
         {
             LoadSpriteAsset("Assets/Art/Backgrounds/echo_garden.png", 100f),
@@ -391,6 +393,7 @@ public static class UmbraPrototypeBuilder
         DeathTrap spikesB = CreateSpikes(props[5], new Vector2(77f, MainSurfaceY));
         CreateCrate(props[0], new Vector2(61f, MainSurfaceY));
         CreatePressureSwitch(props[1], new Vector2(66f, MainSurfaceY), spikesB);
+        CreateCheckpoint(props[2], new Vector2(72f, MainSurfaceY));
         CreateSaw(props[6], new Vector2(92f, -1.2f), new Vector2(2.3f, 0f), 1.45f);
         CreateCheckpoint(props[2], new Vector2(95f, MainSurfaceY));
         CreateLadder(props[4], new Vector2(101.9f, MainSurfaceY));
@@ -497,7 +500,8 @@ public static class UmbraPrototypeBuilder
         body.interpolation = RigidbodyInterpolation2D.Interpolate;
         body.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
         box.AddComponent<PushPullObject2D>();
-        box.GetComponent<SpriteRenderer>().sortingOrder = 8;
+        box.GetComponent<SpriteRenderer>().sortingOrder = 10;
+        AddSpriteHighlight(box, "Cube Highlight", new Color(1f, 0.72f, 0.18f, 0.52f), 1.18f, 9);
         return box;
     }
 
@@ -511,6 +515,19 @@ public static class UmbraPrototypeBuilder
         pressure.targetTrap = target;
         pressure.indicator = obj.GetComponent<SpriteRenderer>();
         obj.GetComponent<SpriteRenderer>().sortingOrder = 7;
+        AddSpriteHighlight(obj, "Pad Highlight", new Color(1f, 0.48f, 0.24f, 0.42f), 1.14f, 6);
+
+        float linkLength = Mathf.Abs(target.transform.position.x - position.x);
+        GameObject link = CreateSpriteObject(
+            "Resonance Link",
+            highlightSprite,
+            new Vector2((target.transform.position.x + position.x) * 0.5f, position.y + 0.06f),
+            new Vector2(linkLength, 0.07f));
+        SpriteRenderer linkRenderer = link.GetComponent<SpriteRenderer>();
+        linkRenderer.color = new Color(1f, 0.38f, 0.28f, 0.58f);
+        linkRenderer.sortingOrder = 5;
+        ResonanceLink2D resonance = link.AddComponent<ResonanceLink2D>();
+        resonance.targetTrap = target;
         return pressure;
     }
 
@@ -531,12 +548,26 @@ public static class UmbraPrototypeBuilder
 
     private static void CreateLadder(Sprite sprite, Vector2 position)
     {
-        GameObject obj = CreateGroundedSpriteObject("Ribbon Ladder", sprite, position.x, position.y, new Vector2(0.72f, 1.45f));
+        GameObject beacon = CreateSpriteObject(
+            "Ladder Beacon",
+            highlightSprite,
+            new Vector2(position.x, position.y + 1.45f),
+            new Vector2(0.92f, 3.15f));
+        SpriteRenderer beaconRenderer = beacon.GetComponent<SpriteRenderer>();
+        beaconRenderer.color = new Color(1f, 0.72f, 0.22f, 0.24f);
+        beaconRenderer.sortingOrder = 5;
+        VisualPulse2D beaconPulse = beacon.AddComponent<VisualPulse2D>();
+        beaconPulse.scaleAmount = 0.025f;
+        beaconPulse.minimumAlpha = 0.16f;
+        beaconPulse.maximumAlpha = 0.32f;
+
+        GameObject obj = CreateGroundedSpriteObject("Ribbon Ladder", sprite, position.x, position.y, new Vector2(0.82f, 1.50f));
         BoxCollider2D collider = obj.AddComponent<BoxCollider2D>();
         collider.isTrigger = true;
         FitColliderFromBottom(collider, sprite, 0.68f, 0.96f);
         obj.AddComponent<ClimbZone2D>();
-        obj.GetComponent<SpriteRenderer>().sortingOrder = 6;
+        obj.GetComponent<SpriteRenderer>().sortingOrder = 8;
+        AddSpriteHighlight(obj, "Ladder Highlight", new Color(1f, 0.78f, 0.28f, 0.44f), 1.10f, 7);
     }
 
     private static DeathTrap CreateSpikes(Sprite sprite, Vector2 position)
@@ -582,6 +613,7 @@ public static class UmbraPrototypeBuilder
         obj.AddComponent<CollectKey>();
         obj.AddComponent<CollectibleFloat2D>();
         obj.GetComponent<SpriteRenderer>().sortingOrder = 12;
+        AddSpriteHighlight(obj, "Echo Highlight", new Color(0.32f, 0.92f, 1f, 0.50f), 1.24f, 11);
     }
 
     private static void CreateDoor(Sprite sprite, Vector2 position)
@@ -589,8 +621,21 @@ public static class UmbraPrototypeBuilder
         GameObject obj = CreateGroundedSpriteObject("Memory Threshold", sprite, position.x, position.y, new Vector2(1.05f, 1.05f));
         BoxCollider2D collider = obj.AddComponent<BoxCollider2D>();
         FitColliderFromBottom(collider, sprite, 0.76f, 0.96f);
-        obj.AddComponent<DoorGoal>();
+        ExpandColliderFromBottom(collider, 1.15f, 7.4f);
+        DoorGoal door = obj.AddComponent<DoorGoal>();
         obj.GetComponent<SpriteRenderer>().sortingOrder = 11;
+        AddSpriteHighlight(obj, "Threshold Highlight", new Color(1f, 0.58f, 0.22f, 0.48f), 1.10f, 10);
+
+        GameObject barrier = CreateSpriteObject(
+            "Memory Barrier",
+            highlightSprite,
+            new Vector2(position.x, position.y + 3.45f),
+            new Vector2(0.78f, 6.9f));
+        barrier.transform.SetParent(obj.transform, true);
+        SpriteRenderer barrierRenderer = barrier.GetComponent<SpriteRenderer>();
+        barrierRenderer.color = new Color(1f, 0.36f, 0.25f, 0.58f);
+        barrierRenderer.sortingOrder = 9;
+        door.barrierRenderer = barrierRenderer;
     }
 
     private static void CreateExit(Sprite sprite, Vector2 position)
@@ -608,6 +653,27 @@ public static class UmbraPrototypeBuilder
     {
         GameObject obj = CreateGroundedSpriteObject(name, sprite, position.x, position.y, new Vector2(scale, scale));
         obj.GetComponent<SpriteRenderer>().sortingOrder = order;
+    }
+
+    private static void AddSpriteHighlight(
+        GameObject target,
+        string name,
+        Color color,
+        float scale,
+        int sortingOrder)
+    {
+        SpriteRenderer source = target.GetComponent<SpriteRenderer>();
+        GameObject highlight = new GameObject(name);
+        highlight.transform.SetParent(target.transform, false);
+        highlight.transform.localScale = new Vector3(scale, scale, 1f);
+        SpriteRenderer renderer = highlight.AddComponent<SpriteRenderer>();
+        renderer.sprite = source.sprite;
+        renderer.color = color;
+        renderer.sortingOrder = sortingOrder;
+        VisualPulse2D pulse = highlight.AddComponent<VisualPulse2D>();
+        pulse.scaleAmount = 0.055f;
+        pulse.minimumAlpha = Mathf.Max(0.12f, color.a * 0.55f);
+        pulse.maximumAlpha = color.a;
     }
 
     [MenuItem("Tools/UMBRA/Validate Five Levels")]
@@ -645,6 +711,7 @@ public static class UmbraPrototypeBuilder
             ValidateVisibleSprite("Echo Shard", prefix, errors);
             ValidateVisibleSprite("Memory Threshold", prefix, errors);
             ValidateVisibleSprite("Return Portal", prefix, errors);
+            ValidateInteractionReadability(i, prefix, errors);
 
             Checkpoint[] checkpoints = Object.FindObjectsByType<Checkpoint>();
             FinishZone finish = Object.FindAnyObjectByType<FinishZone>();
@@ -839,6 +906,34 @@ public static class UmbraPrototypeBuilder
         if (!path.Contains("/Props/EchoFrames/"))
         {
             errors.Add(prefix + objectName + " is still using placeholder art.");
+        }
+    }
+
+    private static void ValidateInteractionReadability(int levelIndex, string prefix, List<string> errors)
+    {
+        DoorGoal door = Object.FindAnyObjectByType<DoorGoal>();
+        BoxCollider2D doorCollider = door != null ? door.GetComponent<BoxCollider2D>() : null;
+        if (door == null || doorCollider == null || doorCollider.bounds.size.y < 7f ||
+            door.barrierRenderer == null || door.barrierRenderer.sprite == null)
+        {
+            errors.Add(prefix + "memory threshold needs a tall visible barrier.");
+        }
+
+        ClimbZone2D ladder = Object.FindAnyObjectByType<ClimbZone2D>();
+        if (ladder == null || GameObject.Find("Ladder Beacon") == null ||
+            ladder.transform.Find("Ladder Highlight") == null)
+        {
+            errors.Add(prefix + "ladder needs a visible beacon and highlight.");
+        }
+
+        if (levelIndex == 0 || levelIndex == 2 || levelIndex == 4)
+        {
+            PushPullObject2D cube = Object.FindAnyObjectByType<PushPullObject2D>();
+            if (cube == null || cube.transform.Find("Cube Highlight") == null ||
+                Object.FindAnyObjectByType<ResonanceLink2D>() == null)
+            {
+                errors.Add(prefix + "cube puzzle needs highlights and a resonance link.");
+            }
         }
     }
 

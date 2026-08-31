@@ -40,8 +40,13 @@ public class PressureSwitch2D : MonoBehaviour
         if (indicator != null)
         {
             indicator.color = activated
-                ? new Color(0.88f, 0.88f, 0.82f, 1f)
-                : new Color(0.24f, 0.24f, 0.26f, 1f);
+                ? new Color(0.55f, 1f, 0.78f, 1f)
+                : new Color(1f, 0.72f, 0.58f, 1f);
+        }
+
+        if (activated)
+        {
+            GameManager.Instance?.ShowHint("RESONANCIA ACTIVADA", 1.7f);
         }
 
         UmbraAudio.Instance?.PlayMechanism();

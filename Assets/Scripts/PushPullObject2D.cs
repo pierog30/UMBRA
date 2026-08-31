@@ -79,4 +79,12 @@ public class PushPullObject2D : MonoBehaviour
 
         body.linearVelocity = new Vector2(horizontalSpeed, body.linearVelocity.y);
     }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.collider.GetComponent<PlayerController2D>() != null)
+        {
+            GameManager.Instance?.ShowHint("EMPUJA / MANTEN E PARA JALAR", 2f);
+        }
+    }
 }

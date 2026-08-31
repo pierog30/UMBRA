@@ -43,6 +43,8 @@ public class GameManager : MonoBehaviour
     private PlayerRespawn pendingRespawn;
     private float deathTimer;
     private float echoMessageTimer;
+    private float hintTimer;
+    private string hintMessage = string.Empty;
     private int sceneIndex;
 
     private string KeySaveName => "UmbraHasKey_" + sceneIndex;
@@ -87,6 +89,11 @@ public class GameManager : MonoBehaviour
         if (echoMessageTimer > 0f)
         {
             echoMessageTimer -= Time.unscaledDeltaTime;
+        }
+
+        if (hintTimer > 0f)
+        {
+            hintTimer -= Time.unscaledDeltaTime;
         }
 
         if (!gameStarted && (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space)))
@@ -138,6 +145,17 @@ public class GameManager : MonoBehaviour
         PlayerPrefs.SetInt(KeySaveName, 1);
         PlayerPrefs.Save();
         UmbraAudio.Instance?.PlayPickup();
+    }
+
+    public void ShowHint(string message, float duration)
+    {
+        if (string.IsNullOrEmpty(message))
+        {
+            return;
+        }
+
+        hintMessage = message;
+        hintTimer = Mathf.Max(hintTimer, duration);
     }
 
     public void PlayerDied(PlayerRespawn player)
@@ -235,6 +253,18 @@ public class GameManager : MonoBehaviour
             GUI.color = previous;
             centered.fontSize = 20;
             GUI.Label(new Rect((Screen.width - 360f) * 0.5f, 70f, 360f, 42f), "ECO RECUPERADO", centered);
+        }
+
+        if (hintTimer > 0f && gameStarted && !finishedGame && !isDead)
+        {
+            Rect hintRect = new Rect((Screen.width - 470f) * 0.5f, Screen.height - 76f, 470f, 42f);
+            Color previous = GUI.color;
+            GUI.color = new Color(0.03f, 0.07f, 0.08f, 0.88f);
+            GUI.DrawTexture(hintRect, Texture2D.whiteTexture);
+            GUI.color = previous;
+            centered.fontSize = 15;
+            centered.fontStyle = FontStyle.Bold;
+            GUI.Label(hintRect, hintMessage, centered);
         }
 
         if (!gameStarted)

@@ -8,6 +8,7 @@ public class ClimbZone2D : MonoBehaviour
         if (player != null)
         {
             player.EnterClimbZone(this);
+            GameManager.Instance?.ShowHint("W / S - TREPAR", 1.5f);
         }
     }
 

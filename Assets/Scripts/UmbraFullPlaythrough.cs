@@ -330,7 +330,7 @@ public class UmbraFullPlaythrough : MonoBehaviour
         }
 
         Debug.Log("UMBRA FULL PLAYTHROUGH COMPLETE: ALL FIVE LEVELS PASSED");
-        Application.Quit(0);
+        UmbraTestExit.Quit(0);
     }
 
     private static void ClearProgress()
@@ -347,6 +347,6 @@ public class UmbraFullPlaythrough : MonoBehaviour
     private static void Fail(string reason)
     {
         Debug.LogError("UMBRA FULL PLAYTHROUGH FAILED: " + reason);
-        Application.Quit(3);
+        UmbraTestExit.Quit(3);
     }
 }

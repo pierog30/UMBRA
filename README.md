@@ -35,10 +35,14 @@ la paleta, los objetos y el mundo visual son propios del proyecto.
 - Salto y deteccion de suelo.
 - Cubos de memoria que se pueden empujar y jalar con `E`.
 - Placas de resonancia y diapasones conectados a peligros.
+- Lineas luminosas que muestran que placa controla cada peligro.
+- Peligros que se retraen sin desaparecer cuando un mecanismo los desactiva.
 - Escaleras de cintas, nudos de espinas y engranajes moviles.
+- Resaltados pulsantes y avisos breves para cajas, fragmentos y escaleras.
 - Faroles de eco que funcionan como checkpoints.
 - Guardado automatico del farol y del fragmento con `PlayerPrefs`.
 - Fragmentos de eco, umbrales de memoria y portales de regreso.
+- Umbrales altos de energia que no pueden evitarse saltando por encima.
 - Cinco recuerdos conectados: jardin, ciudad de cartas, taller de horas,
   biblioteca bajo la lluvia y observatorio.
 - Progresion automatica de un nivel al siguiente.
@@ -50,6 +54,7 @@ la paleta, los objetos y el mundo visual son propios del proyecto.
 - Cinco fondos originales, una hoja de objetos y terreno cosido.
 - Lumo cuenta con 12 cuadros para quieto, carrera, salto y agachado.
 - Al recoger un fragmento aparece un pulso de color y el mensaje `ECO RECUPERADO`.
+- Plataformas con saltos mas tolerantes y un checkpoint adicional en el tramo largo del nivel 5.
 
 ## Los cinco recuerdos
 

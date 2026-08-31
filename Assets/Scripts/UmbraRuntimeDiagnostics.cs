@@ -130,6 +130,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         CheckCollider("Return Portal", true, errors);
         CheckCollider("Memory Threshold", false, errors);
         CheckGroundedGameplayObjects(errors);
+        CheckInteractionReadability(level, errors);
 
         if (FindObjectsByType<DeathTrap>().Length < 2)
         {
@@ -140,6 +141,10 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         if (pressureSwitch != null && pressureSwitch.targetTrap == null)
         {
             errors.Add("pressure switch target");
+        }
+        else if (pressureSwitch != null)
+        {
+            CheckTrapFeedback(pressureSwitch.targetTrap, errors);
         }
 
         LeverSwitch2D lever = FindAnyObjectByType<LeverSwitch2D>();
@@ -184,7 +189,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
             Debug.LogError(
                 "UMBRA RUNTIME TEST FAILED CYCLE " + (completedCycles + 1) +
                 " LEVEL " + level + ": " + string.Join(", ", errors));
-            Application.Quit(2);
+            UmbraTestExit.Quit(2);
             yield break;
         }
 
@@ -220,7 +225,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         Debug.Log(
             "UMBRA RUNTIME STRESS COMPLETE: " + completedCycles + " CYCLES, " +
             validatedLevelLoads + " LEVEL LOADS PASSED");
-        Application.Quit(0);
+        UmbraTestExit.Quit(0);
     }
 
     private static IEnumerator CheckWallFall(
@@ -357,6 +362,62 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         if (collider == null || collider.isTrigger != shouldBeTrigger)
         {
             errors.Add(objectName + " collider");
+        }
+    }
+
+    private static void CheckInteractionReadability(int level, List<string> errors)
+    {
+        DoorGoal door = FindAnyObjectByType<DoorGoal>();
+        BoxCollider2D doorCollider = door != null ? door.GetComponent<BoxCollider2D>() : null;
+        if (door == null || doorCollider == null || doorCollider.bounds.size.y < 7f ||
+            door.barrierRenderer == null || !door.barrierRenderer.enabled)
+        {
+            errors.Add("unskippable visible memory barrier");
+        }
+
+        ClimbZone2D ladder = FindAnyObjectByType<ClimbZone2D>();
+        if (ladder == null || FindSceneObject("Ladder Beacon") == null ||
+            ladder.transform.Find("Ladder Highlight") == null)
+        {
+            errors.Add("visible ladder guidance");
+        }
+
+        if (level == 1 || level == 3 || level == 5)
+        {
+            PushPullObject2D cube = FindAnyObjectByType<PushPullObject2D>();
+            if (cube == null || cube.transform.Find("Cube Highlight") == null ||
+                FindAnyObjectByType<ResonanceLink2D>() == null)
+            {
+                errors.Add("readable resonance puzzle");
+            }
+        }
+    }
+
+    private static void CheckTrapFeedback(DeathTrap trap, List<string> errors)
+    {
+        if (trap == null)
+        {
+            return;
+        }
+
+        Collider2D trapCollider = trap.GetComponent<Collider2D>();
+        SpriteRenderer trapRenderer = trap.GetComponent<SpriteRenderer>();
+        Vector3 armedScale = trap.transform.localScale;
+        trap.SetArmed(false);
+
+        bool remainsVisible = trapRenderer != null && trapRenderer.enabled && trapRenderer.color.a >= 0.6f;
+        bool clearlyRetracted = trap.GetComponent<SimpleMover2D>() != null ||
+            trap.transform.localScale.y <= armedScale.y * 0.4f;
+        if (trap.IsArmed || (trapCollider != null && trapCollider.enabled) || !remainsVisible || !clearlyRetracted)
+        {
+            errors.Add("visible retracted trap feedback");
+        }
+
+        trap.SetArmed(true);
+        if (!trap.IsArmed || (trapCollider != null && !trapCollider.enabled) ||
+            Vector3.Distance(trap.transform.localScale, armedScale) > 0.01f)
+        {
+            errors.Add("trap rearm state");
         }
     }
 
