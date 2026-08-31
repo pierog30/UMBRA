@@ -6,6 +6,7 @@ public class DoorGoal : MonoBehaviour
     public SpriteRenderer barrierRenderer;
 
     private bool showedUnlockedHint;
+    private float lastLockedFeedbackAt = -10f;
 
     private void Update()
     {
@@ -27,15 +28,30 @@ public class DoorGoal : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.collider.GetComponent<PlayerController2D>() == null)
+        TryOpen(collision.collider);
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        TryOpen(collision.collider);
+    }
+
+    private void TryOpen(Collider2D other)
+    {
+        if (other.GetComponent<PlayerController2D>() == null)
         {
             return;
         }
 
-        if (needsKey && !GameManager.Instance.hasKey)
+        if (needsKey && (GameManager.Instance == null || !GameManager.Instance.hasKey))
         {
-            GameManager.Instance.ShowHint("NECESITAS EL FRAGMENTO DE ECO", 2f);
-            UmbraAudio.Instance?.PlayMechanism();
+            if (Time.unscaledTime - lastLockedFeedbackAt > 1f)
+            {
+                lastLockedFeedbackAt = Time.unscaledTime;
+                GameManager.Instance?.ShowHint("NECESITAS EL FRAGMENTO DE ECO", 2f);
+                UmbraAudio.Instance?.PlayMechanism();
+            }
+
             return;
         }
 

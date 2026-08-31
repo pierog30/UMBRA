@@ -8,7 +8,7 @@ using UnityEngine.Rendering;
 public static class UmbraPrototypeBuilder
 {
     private const string MarkerPath = "Assets/UMBRA_SETUP_DONE.txt";
-    private const string SetupVersion = "UMBRA Archive of Echoes build v17";
+    private const string SetupVersion = "UMBRA Archive of Echoes build v19";
     private const float MainGroundY = -2.65f;
     private const float MainGroundHeight = 0.8f;
     private const float MainSurfaceY = MainGroundY + (MainGroundHeight * 0.28f);
@@ -264,7 +264,8 @@ public static class UmbraPrototypeBuilder
         DeathTrap secondSpikes = CreateSpikes(props[5], new Vector2(70f, MainSurfaceY));
         CreateCrate(props[0], new Vector2(55f, MainSurfaceY));
         CreatePressureSwitch(props[1], new Vector2(61f, MainSurfaceY), secondSpikes);
-        CreateSaw(props[6], new Vector2(86f, -1.25f), new Vector2(2.3f, 0f), 1.35f);
+        DeathTrap secondSaw = CreateSaw(props[6], new Vector2(86f, -1.25f), new Vector2(2.3f, 0f), 1.35f);
+        CreateLever(props[11], new Vector2(80f, MainSurfaceY), secondSaw);
         CreateCheckpoint(props[2], new Vector2(75f, MainSurfaceY));
         CreateLadder(props[4], new Vector2(97.9f, MainSurfaceY));
         CreateKey(props[7], new Vector2(104f, 1.25f));
@@ -277,8 +278,8 @@ public static class UmbraPrototypeBuilder
         CreateGroundRoute(terrain, "Letters", new[]
         {
             new Vector2(-4f, 10f), new Vector2(10f, 8f), new Vector2(23f, 9f),
-            new Vector2(36f, 10f), new Vector2(50f, 11f), new Vector2(65f, 11f),
-            new Vector2(80f, 11f), new Vector2(96f, 12f), new Vector2(114f, 20f),
+            new Vector2(36f, 11f), new Vector2(50f, 12f), new Vector2(65f, 12f),
+            new Vector2(80f, 12f), new Vector2(96f, 13f), new Vector2(114f, 20f),
             new Vector2(130f, 10f)
         });
         CreateMovingPlatform("Letter Bridge A", terrain, new Vector2(3f, -1.45f), new Vector2(2.2f, 0.45f), new Vector2(3f, 0f), 1.05f);
@@ -293,7 +294,9 @@ public static class UmbraPrototypeBuilder
         CreateLadder(props[4], new Vector2(44.4f, MainSurfaceY));
         DeathTrap upperSaw = CreateSaw(props[6], new Vector2(59f, -1.2f), new Vector2(0f, 2.4f), 1.3f);
         CreateLever(props[11], new Vector2(50f, SurfaceY(0.3f, 0.55f)), upperSaw);
-        CreateSpikes(props[5], new Vector2(80f, MainSurfaceY));
+        CreateCheckpoint(props[2], new Vector2(70f, MainSurfaceY));
+        DeathTrap lateSpikes = CreateSpikes(props[5], new Vector2(80f, MainSurfaceY));
+        CreateLever(props[11], new Vector2(75f, MainSurfaceY), lateSpikes);
         CreateCheckpoint(props[2], new Vector2(90f, MainSurfaceY));
         CreateLadder(props[4], new Vector2(102.4f, MainSurfaceY));
         CreateKey(props[7], new Vector2(108f, 1.35f));
@@ -575,7 +578,7 @@ public static class UmbraPrototypeBuilder
         GameObject obj = CreateGroundedSpriteObject("Thorn Knot", sprite, position.x, position.y, new Vector2(1.05f, 0.58f));
         BoxCollider2D collider = obj.AddComponent<BoxCollider2D>();
         collider.isTrigger = true;
-        FitColliderFromBottom(collider, sprite, 0.92f, 0.82f);
+        FitColliderFromBottom(collider, sprite, 0.78f, 0.58f);
         DeathTrap trap = obj.AddComponent<DeathTrap>();
         obj.GetComponent<SpriteRenderer>().sortingOrder = 9;
         return trap;
@@ -587,8 +590,8 @@ public static class UmbraPrototypeBuilder
         obj.GetComponent<BoxCollider2D>().size = new Vector2(1.2f, 1.2f);
         DeathTrap trap = obj.AddComponent<DeathTrap>();
         SimpleMover2D mover = obj.AddComponent<SimpleMover2D>();
-        mover.localOffset = offset;
-        mover.speed = speed;
+        mover.localOffset = offset * 0.78f;
+        mover.speed = speed * 0.82f;
         obj.GetComponent<SpriteRenderer>().sortingOrder = 10;
         return trap;
     }

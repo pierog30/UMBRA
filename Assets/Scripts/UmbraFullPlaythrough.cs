@@ -263,7 +263,8 @@ public class UmbraFullPlaythrough : MonoBehaviour
             horizontal = Mathf.Abs(difference) > 0.12f ? Mathf.Sign(difference) : 0f;
             vertical = player.HasClimbZone ? 1f : 0f;
         }
-        else if (activeLever != null && player.transform.position.y > -0.2f &&
+        else if (activeLever != null &&
+            Mathf.Abs(player.transform.position.y - activeLever.transform.position.y) < 1.4f &&
             Mathf.Abs(player.transform.position.x - activeLever.transform.position.x) < 0.8f)
         {
             interact = true;

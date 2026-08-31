@@ -33,14 +33,17 @@ excepciones durante las pruebas automaticas realizadas.
 - Verificacion del reinicio completo de escena conservando el checkpoint.
 - Verificacion de friccion cero, gravedad, interpolacion y valores finitos.
 - Verificacion de un unico `AudioListener` y amplitud audible en el ambiente.
-- Tres recorridos automaticos completos en Play Mode desde el recuerdo 1 hasta el 5.
+- Cinco recorridos automaticos completos en Play Mode desde el recuerdo 1 hasta el 5.
 - Segunda ronda de 50 cargas despues de ajustar la dificultad del nivel 5.
+- Revision de caidas y reinicios por coordenada para localizar zonas frustrantes.
+- Verificacion completa posterior a los ajustes de balance.
 
 ## Resultados medidos
 
 - Prueba de estabilidad: 10 ciclos y 50 cargas de nivel completadas.
-- Recorridos completos: 3 de 3.
-- Fallos del test: 0.
+- Revision jugable solicitada: 5 recorridos completos de 5.
+- Verificacion completa de la version final: aprobada.
+- Fallos de compilacion de la version final: 0.
 - Errores de compilacion: 0.
 - Advertencias de compilacion: 0.
 - `NullReferenceException`: 0.
@@ -50,8 +53,17 @@ excepciones durante las pruebas automaticas realizadas.
 - Capturas visuales revisadas: 15 de 15.
 - Niveles con dos checkpoints: 5 de 5.
 - Niveles con longitud extendida: 5 de 5.
-- Recorridos finales del nivel 5: tres aprobados, una caida y cero reinicios en cada uno.
+- Nivel 5 en la verificacion final: completado sin reinicios.
 - Build de Windows: `Success`.
+
+## Ajustes derivados de la revision de cinco partidas
+
+- Se detectaron repeticiones excesivas alrededor del engranaje de `X 86` en el nivel 1.
+- Se detecto una combinacion poco tolerante de huecos y espinas entre `X 73` y `X 81` en el nivel 2.
+- Se redujo el area peligrosa de las espinas y se suavizo el movimiento de los engranajes.
+- Se amplio el apoyo de terreno y se agrego un checkpoint intermedio en el nivel 2.
+- Se agregaron diapasones para desactivar intencionalmente los dos peligros mas repetitivos.
+- Los niveles 1 y 2 se completaron sin muertes en la comprobacion posterior al ajuste.
 
 ## Riesgo restante
 

@@ -40,6 +40,7 @@ public class LeverSwitch2D : MonoBehaviour
         {
             playerNearby = true;
             nearbyPlayer = player;
+            GameManager.Instance?.ShowHint("E - SINTONIZAR MECANISMO", 1.7f);
         }
     }
 
