@@ -1,4 +1,4 @@
-# UMBRAL
+# UMBRA
 
 Videojuego 2D de plataformas, acertijos y terror psicologico creado en Unity 6000.5.2f1.
 La version actual es jugable de principio a fin con arte y sonido provisionales locales.
@@ -6,8 +6,8 @@ La version actual es jugable de principio a fin con arte y sonido provisionales 
 ## Ejecutar
 
 - En Unity: abrir `Assets/Scenes/Chapter_01_El_Fondo.unity` y pulsar Play.
-- En Windows: ejecutar `Builds/Windows/UMBRAL.exe`.
-- Para regenerar las escenas: `Tools > UMBRAL > Rebuild Complete Game`.
+- En Windows: ejecutar `Builds/Windows/UMBRA.exe`.
+- Para regenerar las escenas: `Tools > UMBRA > Rebuild Complete Game`.
 - Inventario completo: `INVENTARIO_ASSETS.md`.
 - Física, layers, triggers y Rigidbody2D: `REPORTE_TECNICO_UNITY.md`.
 - Resultados de pruebas: `QA_TEST_REPORT.md`.

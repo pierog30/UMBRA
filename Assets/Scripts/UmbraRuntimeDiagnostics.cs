@@ -37,7 +37,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
             return;
         }
 
-        var diagnostics = new GameObject("UMBRAL Runtime Diagnostics");
+        var diagnostics = new GameObject("UMBRA Runtime Diagnostics");
         DontDestroyOnLoad(diagnostics);
         diagnostics.AddComponent<UmbraRuntimeDiagnostics>();
     }
@@ -229,7 +229,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         if (errors.Count > 0)
         {
             Debug.LogError(
-                "UMBRAL RUNTIME TEST FAILED CYCLE " + (completedCycles + 1) +
+                "UMBRA RUNTIME TEST FAILED CYCLE " + (completedCycles + 1) +
                 " LEVEL " + level + ": " + string.Join(", ", errors));
             Application.Quit(2);
             yield break;
@@ -239,7 +239,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         if (requestedCycles <= 5 || validatedLevelLoads % 100 == 0)
         {
             Debug.Log(
-                "UMBRAL RUNTIME TEST PASSED LOAD " + validatedLevelLoads +
+                "UMBRA RUNTIME TEST PASSED LOAD " + validatedLevelLoads +
                 " CYCLE " + (completedCycles + 1) + " LEVEL " + level);
         }
 
@@ -256,7 +256,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         {
             if (completedCycles % 20 == 0)
             {
-                Debug.Log("UMBRAL STRESS PROGRESS: " + completedCycles + "/" + requestedCycles + " CYCLES");
+                Debug.Log("UMBRA STRESS PROGRESS: " + completedCycles + "/" + requestedCycles + " CYCLES");
             }
 
             Time.timeScale = 1f;
@@ -265,7 +265,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         }
 
         Debug.Log(
-            "UMBRAL RUNTIME STRESS COMPLETE: " + completedCycles + " CYCLES, " +
+            "UMBRA RUNTIME STRESS COMPLETE: " + completedCycles + " CYCLES, " +
             validatedLevelLoads + " LEVEL LOADS PASSED");
         Application.Quit(0);
     }

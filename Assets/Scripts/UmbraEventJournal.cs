@@ -54,7 +54,7 @@ public sealed class UmbraEventJournal : MonoBehaviour
         LastEvent = message;
         ReceivedEventCount++;
         visibleTimer = 2.4f;
-        Debug.Log("UMBRAL OBSERVER: " + message);
+        Debug.Log("UMBRA OBSERVER: " + message);
     }
 
     private void OnGUI()

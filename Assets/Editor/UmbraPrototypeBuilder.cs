@@ -9,7 +9,7 @@ using UnityEngine.Rendering;
 public static class UmbraPrototypeBuilder
 {
     private const string MarkerPath = "Assets/UMBRA_SETUP_DONE.txt";
-    private const string SetupVersion = "UMBRAL week 8 mechanics and parallax v3";
+    private const string SetupVersion = "UMBRA week 8 mechanics and parallax v3";
     private static readonly string[] ScenePaths =
     {
         "Assets/Scenes/Chapter_01_El_Fondo.unity",
@@ -37,7 +37,7 @@ public static class UmbraPrototypeBuilder
         };
     }
 
-    [MenuItem("Tools/UMBRAL/Rebuild Complete Game")]
+    [MenuItem("Tools/UMBRA/Rebuild Complete Game")]
     public static void BuildScene()
     {
         Directory.CreateDirectory("Assets/Scenes");
@@ -101,12 +101,12 @@ public static class UmbraPrototypeBuilder
         AssetDatabase.SaveAssets();
         EditorSceneManager.OpenScene(ScenePaths[0], OpenSceneMode.Single);
         Selection.activeObject = AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePaths[0]);
-        Debug.Log("UMBRAL: five connected chapters created.");
+        Debug.Log("UMBRA: five connected chapters created.");
     }
 
     private static void ConfigureWindowsPlayer()
     {
-        PlayerSettings.productName = "UMBRAL";
+        PlayerSettings.productName = "UMBRA";
         PlayerSettings.fullScreenMode = FullScreenMode.Windowed;
         PlayerSettings.defaultScreenWidth = 1280;
         PlayerSettings.defaultScreenHeight = 720;
@@ -610,14 +610,14 @@ public static class UmbraPrototypeBuilder
         obj.GetComponent<SpriteRenderer>().sortingOrder = order;
     }
 
-    [MenuItem("Tools/UMBRAL/Validate Complete Game")]
+    [MenuItem("Tools/UMBRA/Validate Complete Game")]
     public static void ValidateProject()
     {
         var errors = new List<string>();
 
         if (EditorBuildSettings.scenes.Length != ScenePaths.Length)
         {
-            errors.Add("Build Settings must contain exactly five UMBRAL chapters.");
+            errors.Add("Build Settings must contain exactly five UMBRA chapters.");
         }
 
         for (int i = 0; i < ScenePaths.Length; i++)
@@ -773,10 +773,10 @@ public static class UmbraPrototypeBuilder
         EditorSceneManager.OpenScene(ScenePaths[0], OpenSceneMode.Single);
         if (errors.Count > 0)
         {
-            throw new System.Exception("UMBRAL validation failed:\n- " + string.Join("\n- ", errors));
+            throw new System.Exception("UMBRA validation failed:\n- " + string.Join("\n- ", errors));
         }
 
-        Debug.Log("UMBRAL VALIDATION PASSED: all five chapters and their main gameplay objects are configured.");
+        Debug.Log("UMBRA VALIDATION PASSED: all five chapters and their main gameplay objects are configured.");
     }
 
     public static void RebuildAndValidate()
@@ -797,14 +797,14 @@ public static class UmbraPrototypeBuilder
         AssetDatabase.Refresh();
     }
 
-    [MenuItem("Tools/UMBRAL/Open Chapter 2")]
+    [MenuItem("Tools/UMBRA/Open Chapter 2")]
     public static void OpenChapter2ForEditing()
     {
         EditorSceneManager.OpenScene(ScenePaths[1], OpenSceneMode.Single);
-        Debug.Log("UMBRAL: Chapter 2 opened for editing.");
+        Debug.Log("UMBRA: Chapter 2 opened for editing.");
     }
 
-    [MenuItem("Tools/UMBRAL/Capture All Chapter Previews")]
+    [MenuItem("Tools/UMBRA/Capture All Chapter Previews")]
     public static void CaptureAllPreviews()
     {
         Directory.CreateDirectory("Logs/LevelPreviews");
@@ -818,7 +818,7 @@ public static class UmbraPrototypeBuilder
         }
 
         EditorSceneManager.OpenScene(ScenePaths[0], OpenSceneMode.Single);
-        Debug.Log("UMBRAL PREVIEWS PASSED: all five chapter cameras rendered correctly.");
+        Debug.Log("UMBRA PREVIEWS PASSED: all five chapter cameras rendered correctly.");
     }
 
     private static void CaptureCamera(string outputPath)

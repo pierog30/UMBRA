@@ -17,11 +17,11 @@ public static class UmbraTechnicalReport
         "Assets/Scenes/Chapter_05_El_Umbral.unity"
     };
 
-    [MenuItem("Tools/UMBRAL/Generate Technical Physics Report")]
+    [MenuItem("Tools/UMBRA/Generate Technical Physics Report")]
     public static void Generate()
     {
         var report = new StringBuilder();
-        report.AppendLine("# UMBRAL — Reporte técnico completo de Unity");
+        report.AppendLine("# UMBRA — Reporte técnico completo de Unity");
         report.AppendLine();
         report.AppendLine("Generado automáticamente desde las cinco escenas activas.");
         report.AppendLine();
@@ -48,7 +48,7 @@ public static class UmbraTechnicalReport
         File.WriteAllText("REPORTE_TECNICO_UNITY.md", report.ToString(), Encoding.UTF8);
         AssetDatabase.Refresh();
         EditorSceneManager.OpenScene(ScenePaths[0], OpenSceneMode.Single);
-        Debug.Log("UMBRAL TECHNICAL REPORT GENERATED: REPORTE_TECNICO_UNITY.md");
+        Debug.Log("UMBRA TECHNICAL REPORT GENERATED: REPORTE_TECNICO_UNITY.md");
     }
 
     private static void AppendProjectSettings(StringBuilder report)
@@ -68,7 +68,7 @@ public static class UmbraTechnicalReport
 
         report.AppendLine("### Capas configuradas");
         report.AppendLine();
-        report.AppendLine("| Índice | Nombre | Función en UMBRAL |");
+        report.AppendLine("| Índice | Nombre | Función en UMBRA |");
         report.AppendLine("|---:|---|---|");
         for (int i = 0; i < 32; i++)
         {

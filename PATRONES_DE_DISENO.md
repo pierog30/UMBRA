@@ -1,4 +1,4 @@
-# UMBRA - Semana 6 - Patrones de diseno
+# UMBRA - Patrones de diseno
 
 ## Problema identificado
 
@@ -51,4 +51,4 @@ facilita agregar logros, telemetria, subtitulos o nuevos tipos de peligro.
 - Las cinco escenas pasaron `UmbraPrototypeBuilder.ValidateProject`.
 - El build Windows termino con `Result: Success`.
 - El ejecutable cargo y valido 5 de 5 niveles con codigo de salida 0.
-- El log de runtime registro eventos `UMBRAL OBSERVER` en cada capitulo.
+- El log de runtime registro eventos `UMBRA OBSERVER` en cada capitulo.

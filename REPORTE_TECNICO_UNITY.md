@@ -1,4 +1,4 @@
-﻿# UMBRAL — Reporte técnico completo de Unity
+# UMBRA — Reporte técnico completo de Unity
 
 Generado automáticamente desde las cinco escenas activas.
 
@@ -6,7 +6,7 @@ Generado automáticamente desde las cinco escenas activas.
 
 | Propiedad | Valor |
 |---|---|
-| Producto | UMBRAL |
+| Producto | UMBRA |
 | Versión Unity | 6000.5.2f1 |
 | Resolución predeterminada | 1280 × 720 |
 | Modo de ventana | Windowed |
@@ -16,7 +16,7 @@ Generado automáticamente desde las cinco escenas activas.
 
 ### Capas configuradas
 
-| Índice | Nombre | Función en UMBRAL |
+| Índice | Nombre | Función en UMBRA |
 |---:|---|---|
 | 0 | `Default` | Jugador, sensores, enemigos, puertas, llaves y lógica general |
 | 1 | `TransparentFX` | Capa integrada de Unity |

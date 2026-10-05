@@ -1,4 +1,4 @@
-# UMBRAL - Reporte de verificacion
+# UMBRA - Reporte de verificacion
 
 Fecha: 6 de septiembre de 2026  
 Motor: Unity 6000.5.2f1  
@@ -8,7 +8,7 @@ Plataforma: Windows 64 bits
 
 - Compilacion de scripts: aprobada.
 - Validacion de referencias y colliders en cinco escenas: aprobada.
-- Build Windows `Builds/Windows/UMBRAL.exe`: Success.
+- Build Windows `Builds/Windows/UMBRA.exe`: Success.
 - Prueba de estres dentro del ejecutable: 20 recorridos, 100 de 100 escenas cargadas, codigo de salida 0.
 - Pruebas automaticas de movimiento, coyote time, jump buffer, friccion, gravedad, caja y audio: aprobadas.
 - Render de las cinco camaras: aprobado; capturas en `Logs/LevelPreviews`.
@@ -63,7 +63,7 @@ actual sobre el total de cinco niveles. Al iniciar una nueva partida se reinicia
 - Sistemas cubiertos: interaccion con E y por contacto, llave como recurso, progreso por capitulos,
   checkpoints, estado de muerte, intentos y reaparicion.
 
-## Patrones de diseno - Semana 6
+## Patrones de diseno
 
 Revision del 23 de septiembre de 2026: se aplicaron Observer y Strategy a mecanicas existentes sin
 alterar la configuracion de las cinco escenas. `UmbraGameEvents` funciona como publicador tipado de
@@ -75,8 +75,8 @@ conserva la muerte y reaparicion existentes, mientras `WarningOnly` reproduce un
 sin eliminar al jugador. El diagnostico cambia de estrategia durante la prueba y verifica ambos nombres
 antes de restaurar la configuracion original.
 
-- Validacion del editor: `UMBRAL VALIDATION PASSED`, codigo de salida 0.
+- Validacion del editor: `UMBRA VALIDATION PASSED`, codigo de salida 0.
 - Build independiente: `Builds/Hito1_Semana06/UMBRA_Hito1_Semana06.exe`.
 - Resultado del build: Success, codigo de salida 0.
 - Smoke test: 5 de 5 niveles cargados, Observer activo y estrategias configurables, codigo de salida 0.
-- Evidencia runtime: el log contiene publicaciones `UMBRAL OBSERVER` en los cinco capitulos.
+- Evidencia runtime: el log contiene publicaciones `UMBRA OBSERVER` en los cinco capitulos.

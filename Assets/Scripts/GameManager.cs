@@ -331,7 +331,7 @@ public class GameManager : MonoBehaviour
         if (!gameStarted)
         {
             DrawPanel(460f, 180f);
-            GUI.Label(CenteredRect(-72f, 420f, 50f), "UMBRAL", centered);
+            GUI.Label(CenteredRect(-72f, 420f, 50f), "UMBRA", centered);
             centered.fontSize = 16;
             centered.fontStyle = FontStyle.Normal;
             GUI.Label(CenteredRect(-24f, 420f, 32f), "CAPITULO " + LevelNumber + " — " + ChapterNames[Mathf.Clamp(sceneIndex, 0, 4)], centered);
@@ -390,7 +390,7 @@ public class GameManager : MonoBehaviour
             if (endingTimer > 8f)
             {
                 centered.fontSize = 24;
-                GUI.Label(CenteredRect(112f, 620f, 42f), "UMBRAL", centered);
+                GUI.Label(CenteredRect(112f, 620f, 42f), "UMBRA", centered);
                 centered.fontSize = 15;
                 GUI.Label(CenteredRect(154f, 620f, 32f), "FIN — N: NUEVA PARTIDA", centered);
             }

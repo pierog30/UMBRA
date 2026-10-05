@@ -1,8 +1,8 @@
-# UMBRAL - Documentacion tecnica breve
+# UMBRA - Documentacion tecnica breve
 
 El proyecto conserva la version instalada de Unity y no agrega dependencias externas.
 `UmbraPrototypeBuilder` queda por compatibilidad con la base original, pero genera el juego definitivo
-*UMBRAL* y sus escenas `Chapter_01` a `Chapter_05`.
+*UMBRA* y sus escenas `Chapter_01` a `Chapter_05`.
 
 Sistemas principales:
 

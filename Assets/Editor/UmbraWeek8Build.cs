@@ -9,7 +9,7 @@ public static class UmbraWeek8Build
     private const string OutputDirectory = "Builds/Semana08";
     private const string ExecutablePath = OutputDirectory + "/UMBRA_Semana08.exe";
 
-    [MenuItem("Tools/UMBRAL/Build Semana 8 Deliverable")]
+    [MenuItem("Tools/UMBRA/Build Semana 8 Deliverable")]
     public static void BuildDeliverable()
     {
         UmbraPrototypeBuilder.RebuildAndValidate();
