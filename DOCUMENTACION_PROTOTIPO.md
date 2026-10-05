@@ -7,6 +7,8 @@ El proyecto conserva la version instalada de Unity y no agrega dependencias exte
 Sistemas principales:
 
 - `PlayerController2D`: caminar, correr, salto tolerante, agacharse, trepar, empujar/jalar y esconderse.
+- `ShadowDash2D`: Impulso Umbral con `Q` o `Ctrl derecho`, estela visual, recarga y bloqueo en estados incompatibles.
+- `ParallaxLayer2D`: profundidad visual mediante fondos y nieblas con velocidades diferenciadas.
 - `EnemyAI2D`: almas y demonios con patrulla, vigilancia, persecucion, busqueda y retorno.
 - `HorrorEvent2D`: eventos reutilizables persistentes por partida.
 - `GameManager`: portada, pausa, volumen, guardado, muerte, transiciones y final del hospital.

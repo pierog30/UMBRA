@@ -19,6 +19,7 @@ La version actual es jugable de principio a fin con arte y sonido provisionales 
 - `Espacio`, `W` o flecha arriba: saltar.
 - `S` o flecha abajo: agacharse o bajar al trepar.
 - `E`: jalar objetos, accionar palancas y entrar/salir de escondites.
+- `Q` o `Ctrl derecho`: activar el Impulso Umbral; queda bloqueado mientras se recarga y no se puede usar agachado, trepando ni oculto.
 - `Esc`: pausa y control de volumen.
 - `R`: reiniciar desde el ultimo checkpoint.
 - En la portada: `Enter` inicia, `C` continua el capitulo desbloqueado y `N` empieza una partida nueva.
