@@ -4,6 +4,7 @@ public class PlayerController2D : MonoBehaviour
 {
     [Header("Movimiento")]
     public float moveSpeed = 6.5f;
+    public float runMultiplier = 1.28f;
     public float jumpForce = 12f;
     public float climbSpeed = 4.5f;
     public float acceleration = 55f;
@@ -23,8 +24,10 @@ public class PlayerController2D : MonoBehaviour
     public bool IsCrouching { get; private set; }
     public bool IsClimbing { get; private set; }
     public bool IsInteracting { get; private set; }
+    public bool IsHidden { get; private set; }
+    public bool IsRunning { get; private set; }
     public float HorizontalInput { get; private set; }
-    public bool HasClimbZone => activeClimbZone != null;
+    public bool ExternalMovementLocked { get; set; }
 
     private Rigidbody2D rb;
     private BoxCollider2D bodyCollider;
@@ -36,13 +39,8 @@ public class PlayerController2D : MonoBehaviour
     private float jumpBufferCounter;
     private ClimbZone2D activeClimbZone;
     private float stepTimer;
-    private bool automationEnabled;
-    private float automationHorizontal;
-    private float automationVertical;
-    private bool automationInteract;
-    private bool automationCrouch;
-    private bool automationJumpPressed;
-    private bool automationJumpReleased;
+    private bool wasGrounded;
+    private HidingSpot2D activeHidingSpot;
 
     private void Awake()
     {
@@ -56,22 +54,27 @@ public class PlayerController2D : MonoBehaviour
     private void Update()
     {
         bool canMove = GameManager.Instance == null || GameManager.Instance.CanPlayerMove;
-        HorizontalInput = canMove
-            ? (automationEnabled ? automationHorizontal : Input.GetAxisRaw("Horizontal"))
-            : 0f;
-        verticalInput = canMove
-            ? (automationEnabled ? automationVertical : Input.GetAxisRaw("Vertical"))
-            : 0f;
-        IsInteracting = canMove &&
-            (automationEnabled ? automationInteract : Input.GetKey(KeyCode.E));
+        HorizontalInput = canMove ? Input.GetAxisRaw("Horizontal") : 0f;
+        verticalInput = canMove ? Input.GetAxisRaw("Vertical") : 0f;
+        IsInteracting = canMove && Input.GetKey(KeyCode.E);
         IsGrounded = Physics2D.OverlapCircle(groundCheck.position, groundRadius, groundLayer);
+        IsRunning = canMove && !IsCrouching && Input.GetKey(KeyCode.LeftShift);
+
+        if (canMove && activeHidingSpot != null && Input.GetKeyDown(KeyCode.E))
+        {
+            SetHidden(!IsHidden);
+        }
+
+        if (IsHidden)
+        {
+            HorizontalInput = 0f;
+            verticalInput = 0f;
+            return;
+        }
 
         coyoteCounter = IsGrounded ? coyoteTime : coyoteCounter - Time.deltaTime;
         jumpBufferCounter -= Time.deltaTime;
-        bool jumpPressed = automationEnabled
-            ? automationJumpPressed
-            : Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow);
-        if (canMove && jumpPressed)
+        if (canMove && (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow)))
         {
             jumpBufferCounter = jumpBufferTime;
         }
@@ -80,9 +83,7 @@ public class PlayerController2D : MonoBehaviour
             (IsClimbing || Mathf.Abs(verticalInput) > 0.05f);
 
         bool wantsCrouch = canMove && IsGrounded && !IsClimbing &&
-            (automationEnabled
-                ? automationCrouch
-                : Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow));
+            (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow));
         IsCrouching = wantsCrouch || (IsCrouching && IsGrounded && HasCeiling());
         UpdateCrouchCollider();
 
@@ -94,18 +95,20 @@ public class PlayerController2D : MonoBehaviour
             UmbraAudio.Instance?.PlayJump();
         }
 
-        bool jumpReleased = automationEnabled
-            ? automationJumpReleased
-            : Input.GetKeyUp(KeyCode.Space);
-        if (canMove && jumpReleased && rb.linearVelocity.y > 0f)
+        if (canMove &&
+            (Input.GetKeyUp(KeyCode.Space) || Input.GetKeyUp(KeyCode.W) || Input.GetKeyUp(KeyCode.UpArrow)) &&
+            rb.linearVelocity.y > 0f)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * 0.55f);
         }
 
-        automationJumpPressed = false;
-        automationJumpReleased = false;
-
         UpdateFootsteps(canMove);
+
+        if (IsGrounded && !wasGrounded)
+        {
+            UmbraAudio.Instance?.PlayLanding();
+        }
+        wasGrounded = IsGrounded;
 
         if (canMove && Input.GetKeyDown(KeyCode.R))
         {
@@ -122,6 +125,11 @@ public class PlayerController2D : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (ExternalMovementLocked)
+        {
+            return;
+        }
+
         if (IsClimbing)
         {
             rb.gravityScale = 0f;
@@ -131,26 +139,12 @@ public class PlayerController2D : MonoBehaviour
 
         rb.gravityScale = standingGravity;
         float crouchMultiplier = IsCrouching ? 0.35f : 1f;
-        float targetSpeed = HorizontalInput * moveSpeed * crouchMultiplier;
+        float runMultiplierValue = IsRunning ? runMultiplier : 1f;
+        float targetSpeed = HorizontalInput * moveSpeed * runMultiplierValue * crouchMultiplier;
         float control = IsGrounded ? 1f : airControl;
         float rate = Mathf.Abs(targetSpeed) > 0.01f ? acceleration : deceleration;
         float nextSpeed = Mathf.MoveTowards(rb.linearVelocity.x, targetSpeed, rate * control * Time.fixedDeltaTime);
-        float verticalSpeed = rb.linearVelocity.y;
-        if (!IsGrounded && IsTouchingWall() && verticalSpeed > -1.2f)
-        {
-            verticalSpeed = -1.2f;
-        }
-
-        rb.linearVelocity = new Vector2(nextSpeed, verticalSpeed);
-    }
-
-    private bool IsTouchingWall()
-    {
-        Bounds bounds = bodyCollider.bounds;
-        float distance = bounds.extents.x + 0.08f;
-        Vector2 center = bounds.center;
-        return Physics2D.Raycast(center, Vector2.left, distance, groundLayer) ||
-            Physics2D.Raycast(center, Vector2.right, distance, groundLayer);
+        rb.linearVelocity = new Vector2(nextSpeed, rb.linearVelocity.y);
     }
 
     public void EnterClimbZone(ClimbZone2D zone)
@@ -168,32 +162,38 @@ public class PlayerController2D : MonoBehaviour
         }
     }
 
-    public void SetAutomationInput(
-        float horizontal,
-        float vertical,
-        bool interact,
-        bool crouch,
-        bool jumpPressed,
-        bool jumpReleased = false)
+    public void EnterHidingSpot(HidingSpot2D spot)
     {
-        automationEnabled = true;
-        automationHorizontal = Mathf.Clamp(horizontal, -1f, 1f);
-        automationVertical = Mathf.Clamp(vertical, -1f, 1f);
-        automationInteract = interact;
-        automationCrouch = crouch;
-        automationJumpPressed |= jumpPressed;
-        automationJumpReleased |= jumpReleased;
+        activeHidingSpot = spot;
     }
 
-    public void ClearAutomationInput()
+    public void ExitHidingSpot(HidingSpot2D spot)
     {
-        automationEnabled = false;
-        automationHorizontal = 0f;
-        automationVertical = 0f;
-        automationInteract = false;
-        automationCrouch = false;
-        automationJumpPressed = false;
-        automationJumpReleased = false;
+        if (activeHidingSpot != spot)
+        {
+            return;
+        }
+
+        if (IsHidden)
+        {
+            SetHidden(false);
+        }
+        activeHidingSpot = null;
+    }
+
+    private void SetHidden(bool hidden)
+    {
+        IsHidden = hidden;
+        rb.linearVelocity = Vector2.zero;
+        SpriteRenderer renderer = GetComponent<SpriteRenderer>();
+        if (renderer != null)
+        {
+            Color color = renderer.color;
+            color.a = hidden ? 0.18f : 1f;
+            renderer.color = color;
+        }
+        UmbraAudio.Instance?.PlayMechanism();
+        UmbraGameEvents.PublishInteraction(hidden ? "Jugador oculto" : "Jugador visible");
     }
 
     private bool HasCeiling()

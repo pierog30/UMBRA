@@ -8,7 +8,7 @@ public class PlayerRespawn : MonoBehaviour
     private Rigidbody2D rb;
     private int sceneIndex;
 
-    private string SavePrefix => "UmbraCheckpoint_" + sceneIndex + "_";
+    private string SavePrefix => "UmbralCheckpoint_" + sceneIndex + "_";
 
     private void Awake()
     {
@@ -54,7 +54,7 @@ public class PlayerRespawn : MonoBehaviour
 
     public static void ClearSavedCheckpoint(int index)
     {
-        string prefix = "UmbraCheckpoint_" + index + "_";
+        string prefix = "UmbralCheckpoint_" + index + "_";
         PlayerPrefs.DeleteKey(prefix + "Valid");
         PlayerPrefs.DeleteKey(prefix + "X");
         PlayerPrefs.DeleteKey(prefix + "Y");

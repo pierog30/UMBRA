@@ -3,55 +3,50 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    private static readonly string[] LevelNames =
-    {
-        "EL JARDIN DE LAS PRIMERAS VOCES",
-        "LA CIUDAD DE LAS CARTAS NO ENVIADAS",
-        "EL TALLER DE LAS HORAS PRESTADAS",
-        "LA BIBLIOTECA BAJO LA LLUVIA",
-        "EL OBSERVATORIO DE LOS ECOS QUE REGRESAN"
-    };
-    private static readonly string[] MemoryStages =
-    {
-        "INFANCIA",
-        "ADOLESCENCIA",
-        "ADULTEZ",
-        "VEJEZ",
-        "ACEPTACION"
-    };
-    private static readonly Color[] ChapterColors =
-    {
-        new Color(0.18f, 0.78f, 0.74f),
-        new Color(0.88f, 0.32f, 0.52f),
-        new Color(0.95f, 0.62f, 0.18f),
-        new Color(0.34f, 0.62f, 0.92f),
-        new Color(0.62f, 0.43f, 0.92f)
-    };
+    private static GameManager instance;
 
-    public static GameManager Instance { get; private set; }
+    public static GameManager Instance
+    {
+        get
+        {
+            // Unity can reset static fields when scripts are recompiled during Play Mode
+            // without invoking Awake again on the restored scene objects.
+            if (instance == null)
+            {
+                instance = FindAnyObjectByType<GameManager>();
+            }
+
+            return instance;
+        }
+        private set => instance = value;
+    }
 
     public bool hasKey;
     public bool finishedGame;
     public bool gameStarted;
     public bool isPaused;
     public bool isDead;
+    public bool hospitalEnding;
 
     public bool CanPlayerMove => gameStarted && !finishedGame && !isPaused && !isDead;
     public int LevelNumber { get; private set; }
     public int TotalLevels { get; private set; }
+    public int AttemptNumber { get; private set; }
+    public int DeathCount { get; private set; }
 
     private PlayerRespawn pendingRespawn;
     private float deathTimer;
-    private float echoMessageTimer;
-    private float hintTimer;
-    private string hintMessage = string.Empty;
+    private float endingTimer;
+    private float masterVolume;
     private int sceneIndex;
 
-    private string KeySaveName => "UmbraHasKey_" + sceneIndex;
-    private int ChapterIndex => Mathf.Clamp(LevelNumber - 1, 0, LevelNames.Length - 1);
-    private string LevelTitle => LevelNames[ChapterIndex];
-    private string MemoryStage => MemoryStages[ChapterIndex];
-    private Color ChapterColor => ChapterColors[ChapterIndex];
+    private string KeySaveName => "UmbralHasSeal_" + sceneIndex;
+    private const string AttemptSaveName = "UmbralAttemptNumber";
+    private const string DeathCountSaveName = "UmbralDeathCount";
+    private static readonly string[] ChapterNames =
+    {
+        "EL FONDO", "LOS ABANDONADOS", "LA CARNE", "EL PESO", "EL UMBRAL"
+    };
 
     private void Awake()
     {
@@ -62,12 +57,39 @@ public class GameManager : MonoBehaviour
         }
 
         Instance = this;
+        if (GetComponent<UmbraEventJournal>() == null)
+        {
+            gameObject.AddComponent<UmbraEventJournal>();
+        }
         ConfigurePerformance();
         sceneIndex = SceneManager.GetActiveScene().buildIndex;
         LevelNumber = sceneIndex + 1;
         TotalLevels = Mathf.Max(1, SceneManager.sceneCountInBuildSettings);
         hasKey = PlayerPrefs.GetInt(KeySaveName, 0) == 1;
-        Time.timeScale = 0f;
+        AttemptNumber = Mathf.Max(1, PlayerPrefs.GetInt(AttemptSaveName, 1));
+        DeathCount = Mathf.Max(0, PlayerPrefs.GetInt(DeathCountSaveName, 0));
+        masterVolume = PlayerPrefs.GetFloat("UmbralMasterVolume", 0.8f);
+        AudioListener.volume = masterVolume;
+        bool resumeAfterDeath = PlayerPrefs.GetInt("UmbralResumeScene", -1) == sceneIndex;
+        bool directEditorChapterPreview = Application.isEditor && sceneIndex > 0;
+        if (resumeAfterDeath || directEditorChapterPreview)
+        {
+            if (resumeAfterDeath)
+            {
+                PlayerPrefs.DeleteKey("UmbralResumeScene");
+            }
+            gameStarted = true;
+            Time.timeScale = 1f;
+        }
+        else
+        {
+            Time.timeScale = 0f;
+        }
+
+        PublishProgress();
+        PublishPlayerState(
+            resumeAfterDeath ? "REAPARICION" :
+            directEditorChapterPreview ? "JUGANDO" : "PREPARADO");
     }
 
     private static void ConfigurePerformance()
@@ -86,26 +108,31 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        if (echoMessageTimer > 0f)
-        {
-            echoMessageTimer -= Time.unscaledDeltaTime;
-        }
-
-        if (hintTimer > 0f)
-        {
-            hintTimer -= Time.unscaledDeltaTime;
-        }
-
         if (!gameStarted && (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space)))
         {
             gameStarted = true;
             Time.timeScale = 1f;
+            PublishPlayerState("JUGANDO");
+        }
+
+        if (!gameStarted && Input.GetKeyDown(KeyCode.C))
+        {
+            int unlocked = Mathf.Clamp(PlayerPrefs.GetInt("UmbralUnlockedChapter", 1), 1, TotalLevels);
+            Time.timeScale = 1f;
+            SceneManager.LoadScene(unlocked - 1);
+        }
+
+        if (!gameStarted && Input.GetKeyDown(KeyCode.N))
+        {
+            StartNewGame();
         }
 
         if (gameStarted && !finishedGame && !isDead && Input.GetKeyDown(KeyCode.Escape))
         {
             isPaused = !isPaused;
             Time.timeScale = isPaused ? 0f : 1f;
+            if (!isPaused) PlayerPrefs.Save();
+            PublishPlayerState(isPaused ? "PAUSA" : "JUGANDO");
         }
 
         if (isDead)
@@ -113,10 +140,20 @@ public class GameManager : MonoBehaviour
             deathTimer -= Time.unscaledDeltaTime;
             if (deathTimer <= 0f)
             {
-                pendingRespawn?.Respawn();
-                pendingRespawn = null;
-                isDead = false;
+                PlayerPrefs.SetInt("UmbralResumeScene", sceneIndex);
+                PlayerPrefs.Save();
                 Time.timeScale = 1f;
+                SceneManager.LoadScene(sceneIndex);
+            }
+        }
+
+
+        if (hospitalEnding)
+        {
+            endingTimer += Time.unscaledDeltaTime;
+            if (endingTimer > 10f && Input.GetKeyDown(KeyCode.N))
+            {
+                StartNewGame();
             }
         }
 
@@ -141,21 +178,26 @@ public class GameManager : MonoBehaviour
     public void CollectKey()
     {
         hasKey = true;
-        echoMessageTimer = 2.2f;
         PlayerPrefs.SetInt(KeySaveName, 1);
         PlayerPrefs.Save();
         UmbraAudio.Instance?.PlayPickup();
+        UmbraGameEvents.PublishInteraction("Llave del capitulo recogida");
+        PublishProgress();
     }
 
-    public void ShowHint(string message, float duration)
+    public void PrepareVideoCaptureState()
     {
-        if (string.IsNullOrEmpty(message))
-        {
-            return;
-        }
-
-        hintMessage = message;
-        hintTimer = Mathf.Max(hintTimer, duration);
+        gameStarted = true;
+        isPaused = false;
+        isDead = false;
+        finishedGame = false;
+        hospitalEnding = false;
+        hasKey = false;
+        AttemptNumber = 1;
+        DeathCount = 0;
+        Time.timeScale = 1f;
+        PublishProgress();
+        PublishPlayerState("DEMOSTRACION");
     }
 
     public void PlayerDied(PlayerRespawn player)
@@ -167,9 +209,15 @@ public class GameManager : MonoBehaviour
 
         pendingRespawn = player;
         isDead = true;
+        DeathCount++;
+        AttemptNumber++;
+        PlayerPrefs.SetInt(DeathCountSaveName, DeathCount);
+        PlayerPrefs.SetInt(AttemptSaveName, AttemptNumber);
+        PlayerPrefs.Save();
         deathTimer = 0.65f;
         Time.timeScale = 0f;
         UmbraAudio.Instance?.PlayDeath();
+        PublishPlayerState("HAS CAIDO");
     }
 
     public void CompleteLevel()
@@ -181,14 +229,24 @@ public class GameManager : MonoBehaviour
 
         finishedGame = true;
         int unlockedLevel = Mathf.Min(TotalLevels, LevelNumber + 1);
-        PlayerPrefs.SetInt("UmbraUnlockedLevel", Mathf.Max(PlayerPrefs.GetInt("UmbraUnlockedLevel", 1), unlockedLevel));
+        PlayerPrefs.SetInt("UmbralUnlockedChapter", Mathf.Max(PlayerPrefs.GetInt("UmbralUnlockedChapter", 1), unlockedLevel));
         PlayerPrefs.Save();
         Time.timeScale = 0f;
+        if (LevelNumber == TotalLevels)
+        {
+            hospitalEnding = true;
+            endingTimer = 0f;
+        }
+        UmbraGameEvents.PublishInteraction("Salida del capitulo alcanzada");
+        PublishProgress();
+        PublishPlayerState("NIVEL SUPERADO");
     }
 
     private void LoadNextLevel()
     {
         ClearSceneProgress(sceneIndex);
+        PlayerPrefs.SetInt("UmbralResumeScene", sceneIndex + 1);
+        PlayerPrefs.Save();
         Time.timeScale = 1f;
         SceneManager.LoadScene(sceneIndex + 1);
     }
@@ -200,7 +258,10 @@ public class GameManager : MonoBehaviour
             ClearSceneProgress(i);
         }
 
-        PlayerPrefs.SetInt("UmbraUnlockedLevel", 1);
+        PlayerPrefs.SetInt("UmbralUnlockedChapter", 1);
+        PlayerPrefs.SetInt(AttemptSaveName, 1);
+        PlayerPrefs.SetInt(DeathCountSaveName, 0);
+        PlayerPrefs.DeleteKey("UmbralAwakeningSeen");
         PlayerPrefs.Save();
         Time.timeScale = 1f;
         SceneManager.LoadScene(0);
@@ -209,20 +270,41 @@ public class GameManager : MonoBehaviour
     private static void ClearSceneProgress(int index)
     {
         PlayerRespawn.ClearSavedCheckpoint(index);
-        PlayerPrefs.DeleteKey("UmbraHasKey_" + index);
+        PlayerPrefs.DeleteKey("UmbralHasSeal_" + index);
+        HorrorEvent2D.ClearAllForScene(index);
     }
 
     public void RestartFromCheckpoint()
     {
+        UmbraGameEvents.PublishInteraction("Reinicio desde checkpoint");
+        PlayerPrefs.SetInt("UmbralResumeScene", sceneIndex);
+        PlayerPrefs.Save();
         Time.timeScale = 1f;
         SceneManager.LoadScene(sceneIndex);
     }
 
+    private void PublishProgress()
+    {
+        UmbraGameEvents.PublishProgress(new UmbraProgressSnapshot(
+            LevelNumber,
+            TotalLevels,
+            hasKey,
+            finishedGame));
+    }
+
+    private void PublishPlayerState(string state)
+    {
+        UmbraGameEvents.PublishPlayerState(new UmbraPlayerStateSnapshot(
+            state,
+            AttemptNumber,
+            DeathCount));
+    }
+
     private void OnDestroy()
     {
-        if (Instance == this)
+        if (instance == this)
         {
-            Instance = null;
+            instance = null;
             Time.timeScale = 1f;
         }
     }
@@ -231,7 +313,7 @@ public class GameManager : MonoBehaviour
     {
         GUIStyle small = new GUIStyle(GUI.skin.label);
         small.fontSize = 16;
-        small.normal.textColor = new Color(1f, 0.97f, 0.84f);
+        small.normal.textColor = new Color(0.9f, 0.9f, 0.88f);
 
         GUIStyle centered = new GUIStyle(small);
         centered.alignment = TextAnchor.MiddleCenter;
@@ -240,101 +322,105 @@ public class GameManager : MonoBehaviour
 
         if (gameStarted && !finishedGame)
         {
-            GUI.Label(new Rect(20, 18, 230, 28), hasKey ? "FRAGMENTO DE ECO [X]" : "FRAGMENTO DE ECO [ ]", small);
-            GUI.Label(new Rect(Screen.width - 210, 18, 190, 28), "RECUERDO " + LevelNumber + "/" + TotalLevels, small);
-        }
-
-        if (echoMessageTimer > 0f)
-        {
-            float pulse = Mathf.Clamp01(echoMessageTimer / 2.2f);
-            Color previous = GUI.color;
-            GUI.color = new Color(ChapterColor.r, ChapterColor.g, ChapterColor.b, 0.12f * pulse);
-            GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), Texture2D.whiteTexture);
-            GUI.color = previous;
-            centered.fontSize = 20;
-            GUI.Label(new Rect((Screen.width - 360f) * 0.5f, 70f, 360f, 42f), "ECO RECUPERADO", centered);
-        }
-
-        if (hintTimer > 0f && gameStarted && !finishedGame && !isDead)
-        {
-            Rect hintRect = new Rect((Screen.width - 470f) * 0.5f, Screen.height - 76f, 470f, 42f);
-            Color previous = GUI.color;
-            GUI.color = new Color(0.03f, 0.07f, 0.08f, 0.88f);
-            GUI.DrawTexture(hintRect, Texture2D.whiteTexture);
-            GUI.color = previous;
-            centered.fontSize = 15;
-            centered.fontStyle = FontStyle.Bold;
-            GUI.Label(hintRect, hintMessage, centered);
+            GUI.Label(new Rect(20, 18, 220, 28), hasKey ? "LLAVE [X]" : "LLAVE [ ]", small);
+            GUI.Label(new Rect(20, 45, 220, 28), "INTENTO " + AttemptNumber + " · CAIDAS " + DeathCount, small);
+            GUI.Label(new Rect(Screen.width - 310, 18, 290, 28), "PROGRESO " + LevelNumber + "/" + TotalLevels, small);
+            GUI.Label(new Rect(Screen.width - 310, 45, 290, 28), ChapterNames[Mathf.Clamp(sceneIndex, 0, 4)], small);
         }
 
         if (!gameStarted)
         {
-            DrawPanel(620f, 245f);
-            GUI.Label(CenteredRect(-92f, 560f, 48f), "UMBRA", centered);
-            centered.fontSize = 18;
-            GUI.Label(CenteredRect(-49f, 560f, 34f), "EL ARCHIVO DE LOS ECOS", centered);
-            centered.fontSize = 15;
+            DrawPanel(460f, 180f);
+            GUI.Label(CenteredRect(-72f, 420f, 50f), "UMBRAL", centered);
+            centered.fontSize = 16;
             centered.fontStyle = FontStyle.Normal;
-            GUI.Label(CenteredRect(-3f, 560f, 30f), "RECUERDO " + LevelNumber + " - " + MemoryStage, centered);
-            GUI.Label(CenteredRect(27f, 580f, 34f), LevelTitle, centered);
-            GUI.Label(CenteredRect(73f, 560f, 30f), "ENTER", centered);
+            GUI.Label(CenteredRect(-24f, 420f, 32f), "CAPITULO " + LevelNumber + " — " + ChapterNames[Mathf.Clamp(sceneIndex, 0, 4)], centered);
+            GUI.Label(CenteredRect(18f, 420f, 32f), "ENTER: COMENZAR ASCENSO   C: CONTINUAR   N: NUEVA PARTIDA", centered);
+            GUI.Label(CenteredRect(52f, 420f, 28f), "A/D MOVER · SHIFT CORRER · ESPACIO SALTAR · E INTERACTUAR", centered);
         }
 
         if (isPaused)
         {
-            DrawPanel(500f, 165f);
+            DrawPanel(520f, 225f);
             GUI.Label(CenteredRect(-48f, 420f, 45f), "PAUSA", centered);
             centered.fontSize = 16;
             centered.fontStyle = FontStyle.Normal;
-            GUI.Label(CenteredRect(20f, 420f, 35f), "ESC CONTINUAR     R REINICIAR", centered);
+            GUI.Label(CenteredRect(5f, 470f, 35f), "ESC CONTINUAR     R REINICIAR", centered);
+            GUI.Label(CenteredRect(42f, 470f, 28f), "VOLUMEN", centered);
+            masterVolume = GUI.HorizontalSlider(CenteredRect(76f, 280f, 24f), masterVolume, 0f, 1f);
+            AudioListener.volume = masterVolume;
+            PlayerPrefs.SetFloat("UmbralMasterVolume", masterVolume);
         }
 
         if (isDead)
         {
             GUI.Box(new Rect(0f, 0f, Screen.width, Screen.height), "");
             GUI.Label(CenteredRect(-10f, 420f, 45f), "HAS CAIDO", centered);
+            centered.fontSize = 16;
+            centered.fontStyle = FontStyle.Normal;
+            GUI.Label(CenteredRect(30f, 420f, 32f), "EL INTENTO " + AttemptNumber + " COMIENZA EN EL ULTIMO CHECKPOINT", centered);
         }
 
         if (finishedGame && LevelNumber < TotalLevels)
         {
-            DrawPanel(560f, 195f);
-            GUI.Label(CenteredRect(-65f, 520f, 45f), "RECUERDO RECUPERADO", centered);
+            DrawPanel(500f, 180f);
+            GUI.Label(CenteredRect(-55f, 460f, 45f), ChapterNames[Mathf.Clamp(sceneIndex, 0, 4)] + " SUPERADO", centered);
             centered.fontSize = 16;
             centered.fontStyle = FontStyle.Normal;
-            GUI.Label(CenteredRect(-12f, 520f, 34f), LevelTitle, centered);
-            GUI.Label(CenteredRect(42f, 520f, 35f), "ENTER - SIGUIENTE RECUERDO", centered);
+            GUI.Label(CenteredRect(25f, 460f, 35f), "ENTER - SIGUIENTE NIVEL", centered);
         }
 
-        if (finishedGame && LevelNumber == TotalLevels)
+        if (hospitalEnding)
         {
-            DrawPanel(560f, 350f);
-            GUI.Label(CenteredRect(-145f, 520f, 45f), "ARCHIVO RECONSTRUIDO", centered);
-            centered.fontSize = 15;
-            centered.fontStyle = FontStyle.Normal;
-            GUI.Label(CenteredRect(-82f, 520f, 30f), "CREDITOS", centered);
-            GUI.Label(CenteredRect(-42f, 520f, 28f), "Victor Cardenas - Project Owner", centered);
-            GUI.Label(CenteredRect(-12f, 520f, 28f), "Andres Obispo - Scrum Master", centered);
-            GUI.Label(CenteredRect(18f, 520f, 28f), "Gian Piero Gonzales - Programacion", centered);
-            GUI.Label(CenteredRect(48f, 520f, 28f), "Jim Davila - Niveles", centered);
-            GUI.Label(CenteredRect(78f, 520f, 28f), "Segundo Silva - Arte", centered);
-            GUI.Label(CenteredRect(108f, 520f, 28f), "Luis Sotelo - QA y Sonido", centered);
-            GUI.Label(CenteredRect(150f, 520f, 28f), "ENTER - VOLVER A EMPEZAR", centered);
+            GUI.color = endingTimer < 2.2f ? Color.Lerp(Color.black, Color.white, endingTimer / 2.2f) : new Color(0.9f, 0.92f, 0.9f);
+            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            centered.normal.textColor = new Color(0.08f, 0.1f, 0.12f);
+            if (endingTimer > 2.4f)
+            {
+                DrawHospitalRoom();
+                GUI.Label(CenteredRect(-70f, 620f, 45f), "HABITACION 307", centered);
+            }
+            if (endingTimer > 4.2f)
+            {
+                centered.fontSize = 18;
+                GUI.Label(CenteredRect(10f, 760f, 35f), "Doctor: Estuviste muerto durante tres minutos.", centered);
+                GUI.Label(CenteredRect(48f, 760f, 35f), "Logramos reanimarte. Ahora descansa.", centered);
+            }
+            if (endingTimer > 8f)
+            {
+                centered.fontSize = 24;
+                GUI.Label(CenteredRect(112f, 620f, 42f), "UMBRAL", centered);
+                centered.fontSize = 15;
+                GUI.Label(CenteredRect(154f, 620f, 32f), "FIN — N: NUEVA PARTIDA", centered);
+            }
         }
     }
 
-    private void DrawPanel(float width, float height)
+    private static void DrawPanel(float width, float height)
     {
-        Rect panel = new Rect((Screen.width - width) * 0.5f, (Screen.height - height) * 0.5f, width, height);
-        Color previous = GUI.color;
-        GUI.color = new Color(0.035f, 0.075f, 0.09f, 0.92f);
-        GUI.DrawTexture(panel, Texture2D.whiteTexture);
-        GUI.color = ChapterColor;
-        GUI.DrawTexture(new Rect(panel.x, panel.y, panel.width, 5f), Texture2D.whiteTexture);
-        GUI.color = previous;
+        GUI.Box(new Rect((Screen.width - width) * 0.5f, (Screen.height - height) * 0.5f, width, height), "");
     }
 
     private static Rect CenteredRect(float verticalOffset, float width, float height)
     {
         return new Rect((Screen.width - width) * 0.5f, (Screen.height * 0.5f) + verticalOffset, width, height);
+    }
+
+    private static void DrawHospitalRoom()
+    {
+        Color previous = GUI.color;
+        GUI.color = new Color(0.7f, 0.74f, 0.75f);
+        GUI.DrawTexture(new Rect(Screen.width * 0.1f, Screen.height * 0.62f, Screen.width * 0.64f, 72f), Texture2D.whiteTexture);
+        GUI.color = new Color(0.36f, 0.4f, 0.42f);
+        GUI.DrawTexture(new Rect(Screen.width * 0.12f, Screen.height * 0.59f, 12f, 120f), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(Screen.width * 0.71f, Screen.height * 0.59f, 12f, 120f), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(Screen.width * 0.78f, Screen.height * 0.42f, 120f, 78f), Texture2D.whiteTexture);
+        GUI.color = new Color(0.25f, 0.62f, 0.46f);
+        GUI.DrawTexture(new Rect(Screen.width * 0.795f, Screen.height * 0.45f, 88f, 4f), Texture2D.whiteTexture);
+        GUI.color = new Color(0.18f, 0.2f, 0.22f);
+        GUI.DrawTexture(new Rect(Screen.width * 0.86f, Screen.height * 0.48f, 38f, 145f), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(Screen.width * 0.845f, Screen.height * 0.44f, 68f, 52f), Texture2D.whiteTexture);
+        GUI.color = previous;
     }
 }

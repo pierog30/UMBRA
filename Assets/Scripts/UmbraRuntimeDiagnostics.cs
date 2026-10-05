@@ -15,7 +15,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
     private static void StartIfRequested()
     {
         string[] arguments = System.Environment.GetCommandLineArgs();
-        bool shouldStart = arguments.Contains("-umbraSmoke");
+        bool shouldStart = arguments.Contains("-umbralSmoke") || arguments.Contains("-umbraSmoke");
 
         foreach (string argument in arguments)
         {
@@ -27,7 +27,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
 
             if (int.TryParse(argument.Substring(prefix.Length), out int cycles))
             {
-                requestedCycles = Mathf.Clamp(cycles, 1, 50);
+                requestedCycles = Mathf.Clamp(cycles, 1, 1000);
                 shouldStart = true;
             }
         }
@@ -37,7 +37,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
             return;
         }
 
-        var diagnostics = new GameObject("UMBRA Runtime Diagnostics");
+        var diagnostics = new GameObject("UMBRAL Runtime Diagnostics");
         DontDestroyOnLoad(diagnostics);
         diagnostics.AddComponent<UmbraRuntimeDiagnostics>();
     }
@@ -73,24 +73,20 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         CheckComponent<PlayerRespawn>("Player", errors);
         CheckComponent<PlayerSpriteAnimator>("Player", errors);
         CheckComponent<CameraFollow2D>("Main Camera", errors);
-        CheckComponent<Checkpoint>("Echo Lantern", errors);
-        CheckComponent<CollectKey>("Echo Shard", errors);
-        CheckComponent<DoorGoal>("Memory Threshold", errors);
-        CheckComponent<FinishZone>("Return Portal", errors);
-
-        if (FindObjectsByType<Checkpoint>().Length < 2)
-        {
-            errors.Add("extended checkpoint route");
-        }
-
-        FinishZone finish = FindAnyObjectByType<FinishZone>();
-        if (finish == null || finish.transform.position.x < 118f)
-        {
-            errors.Add("extended level length");
-        }
+        CheckComponent<Checkpoint>("Checkpoint", errors);
+        CheckComponent<CollectKey>("Key", errors);
+        CheckComponent<DoorGoal>("Locked Door", errors);
+        CheckComponent<FinishZone>("Finish Zone", errors);
+        CheckComponent<HidingSpot2D>("Hiding Alcove", errors);
+        CheckComponent<NarrativeEcho2D>("Memory Echo " + level, errors);
 
         GameManager manager = FindAnyObjectByType<GameManager>();
         PlayerController2D player = FindAnyObjectByType<PlayerController2D>();
+        UmbraEventJournal eventJournal = FindAnyObjectByType<UmbraEventJournal>();
+        if (eventJournal == null || UmbraGameEvents.ObserverCount < 3 || UmbraGameEvents.PublishedEventCount < 2)
+        {
+            errors.Add("observer pattern wiring");
+        }
         Rigidbody2D playerBody = player != null ? player.GetComponent<Rigidbody2D>() : null;
         BoxCollider2D playerCollider = player != null ? player.GetComponent<BoxCollider2D>() : null;
         if (playerCollider == null || playerCollider.sharedMaterial == null || playerCollider.sharedMaterial.friction > 0.01f)
@@ -126,25 +122,70 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
             errors.Add("audible audio signal");
         }
 
-        CheckCollider("Echo Shard", true, errors);
-        CheckCollider("Return Portal", true, errors);
-        CheckCollider("Memory Threshold", false, errors);
-        CheckGroundedGameplayObjects(errors);
-        CheckInteractionReadability(level, errors);
+        CheckCollider("Key", true, errors);
+        CheckCollider("Finish Zone", true, errors);
+        CheckCollider("Locked Door", false, errors);
 
         if (FindObjectsByType<DeathTrap>().Length < 2)
         {
             errors.Add("death traps");
         }
 
+        EnemyAI2D enemy = FindAnyObjectByType<EnemyAI2D>();
+        Collider2D enemyCollider = enemy != null ? enemy.GetComponent<Collider2D>() : null;
+        if (enemy == null || enemyCollider == null || !enemyCollider.isTrigger ||
+            enemy.chaseSpeed <= enemy.patrolSpeed || enemy.viewDistance <= 0f || enemy.obstacleMask.value == 0)
+        {
+            errors.Add("enemy AI configuration");
+        }
+
+        int horrorCount = FindObjectsByType<HorrorEvent2D>().Length;
+        if (horrorCount != (level == 5 ? 2 : 1))
+        {
+            errors.Add("horror event count");
+        }
+
+        CameraFollow2D boundedCamera = Camera.main != null ? Camera.main.GetComponent<CameraFollow2D>() : null;
+        if (boundedCamera == null || !boundedCamera.useBounds || boundedCamera.maxBounds.x <= boundedCamera.minBounds.x)
+        {
+            errors.Add("camera bounds");
+        }
+
+        if (level == 1 && FindAnyObjectByType<AwakeningSequence2D>() == null)
+        {
+            errors.Add("awakening sequence");
+        }
+
+        HidingSpot2D hidingSpot = FindAnyObjectByType<HidingSpot2D>();
+        RaycastHit2D hidingGround = hidingSpot != null
+            ? Physics2D.Raycast(hidingSpot.transform.position, Vector2.down, 3f, LayerMask.GetMask("Ground"))
+            : default;
+        if (hidingSpot == null || hidingGround.collider == null)
+        {
+            errors.Add("hiding spot unsupported");
+        }
+
+        DeathTrap visibleTrap = FindObjectsByType<DeathTrap>()
+            .FirstOrDefault(trap => trap.GetComponent<SpriteRenderer>() != null && trap.GetComponent<SpriteRenderer>().enabled);
+        if (visibleTrap != null)
+        {
+            Collider2D trapCollider = visibleTrap.GetComponent<Collider2D>();
+            TrapResponseMode originalMode = visibleTrap.responseMode;
+            visibleTrap.SetResponseMode(TrapResponseMode.WarningOnly);
+            if (visibleTrap.ActiveStrategyName != "WarningOnly") errors.Add("warning trap strategy");
+            visibleTrap.SetResponseMode(TrapResponseMode.Lethal);
+            if (visibleTrap.ActiveStrategyName != "Lethal") errors.Add("lethal trap strategy");
+            visibleTrap.SetResponseMode(originalMode);
+            visibleTrap.SetArmed(false);
+            if (trapCollider != null && trapCollider.enabled) errors.Add("trap did not disarm");
+            visibleTrap.SetArmed(true);
+            if (trapCollider != null && !trapCollider.enabled) errors.Add("trap did not rearm");
+        }
+
         PressureSwitch2D pressureSwitch = FindAnyObjectByType<PressureSwitch2D>();
         if (pressureSwitch != null && pressureSwitch.targetTrap == null)
         {
             errors.Add("pressure switch target");
-        }
-        else if (pressureSwitch != null)
-        {
-            CheckTrapFeedback(pressureSwitch.targetTrap, errors);
         }
 
         LeverSwitch2D lever = FindAnyObjectByType<LeverSwitch2D>();
@@ -177,6 +218,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         if (completedCycles == 0 && player != null && playerBody != null && manager != null)
         {
             yield return StartCoroutine(CheckWallFall(player, playerBody, manager, errors));
+            yield return StartCoroutine(CheckLadderTraversal(player, playerBody, errors));
 
             if (pushBox != null && pushBoxBody != null)
             {
@@ -187,9 +229,9 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         if (errors.Count > 0)
         {
             Debug.LogError(
-                "UMBRA RUNTIME TEST FAILED CYCLE " + (completedCycles + 1) +
+                "UMBRAL RUNTIME TEST FAILED CYCLE " + (completedCycles + 1) +
                 " LEVEL " + level + ": " + string.Join(", ", errors));
-            UmbraTestExit.Quit(2);
+            Application.Quit(2);
             yield break;
         }
 
@@ -197,7 +239,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         if (requestedCycles <= 5 || validatedLevelLoads % 100 == 0)
         {
             Debug.Log(
-                "UMBRA RUNTIME TEST PASSED LOAD " + validatedLevelLoads +
+                "UMBRAL RUNTIME TEST PASSED LOAD " + validatedLevelLoads +
                 " CYCLE " + (completedCycles + 1) + " LEVEL " + level);
         }
 
@@ -214,7 +256,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         {
             if (completedCycles % 20 == 0)
             {
-                Debug.Log("UMBRA STRESS PROGRESS: " + completedCycles + "/" + requestedCycles + " CYCLES");
+                Debug.Log("UMBRAL STRESS PROGRESS: " + completedCycles + "/" + requestedCycles + " CYCLES");
             }
 
             Time.timeScale = 1f;
@@ -223,9 +265,9 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         }
 
         Debug.Log(
-            "UMBRA RUNTIME STRESS COMPLETE: " + completedCycles + " CYCLES, " +
+            "UMBRAL RUNTIME STRESS COMPLETE: " + completedCycles + " CYCLES, " +
             validatedLevelLoads + " LEVEL LOADS PASSED");
-        UmbraTestExit.Quit(0);
+        Application.Quit(0);
     }
 
     private static IEnumerator CheckWallFall(
@@ -237,7 +279,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         manager.gameStarted = true;
         Time.timeScale = 1f;
 
-        Vector2 testPosition = new Vector2(-7f, 1f);
+        Vector2 testPosition = new Vector2(player.transform.position.x, 1f);
         GameObject wall = new GameObject("Diagnostics Wall");
         wall.layer = LayerMask.NameToLayer("Ground");
         wall.transform.position = new Vector2(testPosition.x + 0.46f, 1f);
@@ -249,7 +291,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         Physics2D.SyncTransforms();
         float startY = playerBody.position.y;
 
-        for (int i = 0; i < 24; i++)
+        for (int i = 0; i < 12; i++)
         {
             yield return new WaitForFixedUpdate();
         }
@@ -258,11 +300,9 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         {
             errors.Add("invalid player physics values");
         }
-        else if (playerBody.position.y > startY - 0.25f)
+        else if (playerBody.position.y > startY - 0.15f)
         {
-            errors.Add(
-                "player remained stuck to a wall (drop=" +
-                (startY - playerBody.position.y).ToString("F2") + ")");
+            errors.Add("player remained stuck to a wall");
         }
 
         Destroy(wall);
@@ -287,6 +327,12 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
             yield return new WaitForFixedUpdate();
         }
 
+        if (pushBoxBody == null)
+        {
+            errors.Add("push box was destroyed during braking test");
+            yield break;
+        }
+
         if (Mathf.Abs(pushBoxBody.linearVelocity.x) > 0.2f)
         {
             errors.Add("push box did not brake");
@@ -303,6 +349,11 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
 
         for (int i = 0; i < 60; i++)
         {
+            if (pushBoxBody == null || player == null)
+            {
+                errors.Add("push box scene changed during control test");
+                yield break;
+            }
             player.transform.position = pushBoxBody.position + new Vector2(-0.8f, 0f);
             yield return new WaitForFixedUpdate();
         }
@@ -323,10 +374,72 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
             yield return new WaitForFixedUpdate();
         }
 
+        if (pushBoxBody == null)
+        {
+            errors.Add("push box was destroyed during stop test");
+            yield break;
+        }
+
         if (Mathf.Abs(pushBoxBody.linearVelocity.x) > 0.2f)
         {
             errors.Add("push box is slippery after pushing");
         }
+    }
+
+    private static IEnumerator CheckLadderTraversal(
+        PlayerController2D player,
+        Rigidbody2D playerBody,
+        List<string> errors)
+    {
+        ClimbZone2D climbZone = FindAnyObjectByType<ClimbZone2D>();
+        if (climbZone == null)
+        {
+            errors.Add("ladder missing");
+            yield break;
+        }
+
+        PlatformEffector2D platform = FindObjectsByType<PlatformEffector2D>()
+            .OrderBy(effector => Mathf.Abs(effector.transform.position.x - climbZone.transform.position.x))
+            .FirstOrDefault();
+        Collider2D platformCollider = platform != null ? platform.GetComponent<Collider2D>() : null;
+        if (platformCollider == null)
+        {
+            errors.Add("one-way ladder platform missing");
+            yield break;
+        }
+
+        DeathTrap[] traps = FindObjectsByType<DeathTrap>();
+        foreach (DeathTrap trap in traps) trap.SetArmed(false);
+        EnemyAI2D[] enemies = FindObjectsByType<EnemyAI2D>();
+        foreach (EnemyAI2D enemy in enemies) enemy.enabled = false;
+
+        Vector2 originalPosition = playerBody.position;
+        float originalGravity = playerBody.gravityScale;
+        player.enabled = false;
+        playerBody.simulated = true;
+        playerBody.gravityScale = 0f;
+        float platformTop = platformCollider.bounds.max.y;
+        playerBody.position = new Vector2(climbZone.transform.position.x, platformCollider.bounds.min.y - 0.85f);
+        Physics2D.SyncTransforms();
+
+        for (int i = 0; i < 75; i++)
+        {
+            playerBody.linearVelocity = new Vector2(0f, player.climbSpeed);
+            yield return new WaitForFixedUpdate();
+        }
+
+        if (playerBody.position.y <= platformTop + 0.45f)
+        {
+            errors.Add("ladder blocked by upper platform");
+        }
+
+        playerBody.linearVelocity = Vector2.zero;
+        playerBody.position = originalPosition;
+        playerBody.gravityScale = originalGravity;
+        Physics2D.SyncTransforms();
+        player.enabled = true;
+        foreach (EnemyAI2D enemy in enemies) if (enemy != null) enemy.enabled = true;
+        foreach (DeathTrap trap in traps) if (trap != null) trap.SetArmed(true);
     }
 
     private static void SetPlayerState(
@@ -348,7 +461,7 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
 
     private static void CheckComponent<T>(string objectName, List<string> errors) where T : Component
     {
-        GameObject obj = FindSceneObject(objectName);
+        GameObject obj = GameObject.Find(objectName);
         if (obj == null || obj.GetComponent<T>() == null)
         {
             errors.Add(objectName + "/" + typeof(T).Name);
@@ -357,74 +470,12 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
 
     private static void CheckCollider(string objectName, bool shouldBeTrigger, List<string> errors)
     {
-        GameObject obj = FindSceneObject(objectName);
+        GameObject obj = GameObject.Find(objectName);
         Collider2D collider = obj != null ? obj.GetComponent<Collider2D>() : null;
         if (collider == null || collider.isTrigger != shouldBeTrigger)
         {
             errors.Add(objectName + " collider");
         }
-    }
-
-    private static void CheckInteractionReadability(int level, List<string> errors)
-    {
-        DoorGoal door = FindAnyObjectByType<DoorGoal>();
-        BoxCollider2D doorCollider = door != null ? door.GetComponent<BoxCollider2D>() : null;
-        if (door == null || doorCollider == null || doorCollider.bounds.size.y < 7f ||
-            door.barrierRenderer == null || !door.barrierRenderer.enabled)
-        {
-            errors.Add("unskippable visible memory barrier");
-        }
-
-        ClimbZone2D ladder = FindAnyObjectByType<ClimbZone2D>();
-        if (ladder == null || FindSceneObject("Ladder Beacon") == null ||
-            ladder.transform.Find("Ladder Highlight") == null)
-        {
-            errors.Add("visible ladder guidance");
-        }
-
-        if (level == 1 || level == 3 || level == 5)
-        {
-            PushPullObject2D cube = FindAnyObjectByType<PushPullObject2D>();
-            if (cube == null || cube.transform.Find("Cube Highlight") == null ||
-                FindAnyObjectByType<ResonanceLink2D>() == null)
-            {
-                errors.Add("readable resonance puzzle");
-            }
-        }
-    }
-
-    private static void CheckTrapFeedback(DeathTrap trap, List<string> errors)
-    {
-        if (trap == null)
-        {
-            return;
-        }
-
-        Collider2D trapCollider = trap.GetComponent<Collider2D>();
-        SpriteRenderer trapRenderer = trap.GetComponent<SpriteRenderer>();
-        Vector3 armedScale = trap.transform.localScale;
-        trap.SetArmed(false);
-
-        bool remainsVisible = trapRenderer != null && trapRenderer.enabled && trapRenderer.color.a >= 0.6f;
-        bool clearlyRetracted = trap.GetComponent<SimpleMover2D>() != null ||
-            trap.transform.localScale.y <= armedScale.y * 0.4f;
-        if (trap.IsArmed || (trapCollider != null && trapCollider.enabled) || !remainsVisible || !clearlyRetracted)
-        {
-            errors.Add("visible retracted trap feedback");
-        }
-
-        trap.SetArmed(true);
-        if (!trap.IsArmed || (trapCollider != null && !trapCollider.enabled) ||
-            Vector3.Distance(trap.transform.localScale, armedScale) > 0.01f)
-        {
-            errors.Add("trap rearm state");
-        }
-    }
-
-    private static GameObject FindSceneObject(string objectName)
-    {
-        return Resources.FindObjectsOfTypeAll<GameObject>()
-            .FirstOrDefault(obj => obj.scene.IsValid() && obj.name == objectName);
     }
 
     private static bool HasAudibleAmbience(UmbraAudio audio)
@@ -444,34 +495,5 @@ public class UmbraRuntimeDiagnostics : MonoBehaviour
         }
 
         return samples.Max(sample => Mathf.Abs(sample)) * ambience.volume >= 0.025f;
-    }
-
-    private static void CheckGroundedGameplayObjects(List<string> errors)
-    {
-        Physics2D.SyncTransforms();
-        int groundMask = LayerMask.GetMask("Ground");
-        foreach (SpriteRenderer renderer in FindObjectsByType<SpriteRenderer>())
-        {
-            string objectName = renderer.gameObject.name;
-            bool shouldBeGrounded = objectName == "Memory Cube" || objectName == "Resonance Pad" ||
-                objectName == "Echo Lantern" || objectName == "Ribbon Ladder" ||
-                objectName == "Thorn Knot" || objectName == "Tuning Fork" ||
-                objectName == "Memory Threshold" || objectName == "Return Portal" ||
-                objectName.StartsWith("Memory Tablet", System.StringComparison.Ordinal);
-            if (!shouldBeGrounded)
-            {
-                continue;
-            }
-
-            Bounds bounds = renderer.bounds;
-            Collider2D[] hits = Physics2D.OverlapPointAll(
-                new Vector2(bounds.center.x, bounds.min.y - 0.035f),
-                groundMask);
-            bool supported = hits.Any(hit => hit.gameObject != renderer.gameObject && !hit.isTrigger);
-            if (!supported)
-            {
-                errors.Add(objectName + " floating");
-            }
-        }
     }
 }

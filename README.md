@@ -1,77 +1,51 @@
-# UMBRA: El Archivo de los Ecos
+# UMBRAL
 
-Videojuego 2D para el curso de Diseno y Desarrollo de Juegos Interactivos II.
+Videojuego 2D de plataformas, acertijos y terror psicologico creado en Unity 6000.5.2f1.
+La version actual es jugable de principio a fin con arte y sonido provisionales locales.
 
-La propuesta sigue a Lumo, un viajero de tela con una luz en el pecho que recorre
-recuerdos construidos con papel, ceramica y objetos cosidos. La atmosfera de los
-plataformeros narrativos es una referencia general, pero la historia, el personaje,
-la paleta, los objetos y el mundo visual son propios del proyecto.
+## Ejecutar
 
-## Como abrirlo
-
-1. Abre Unity Hub.
-2. Inicia sesion o activa la licencia personal si Unity lo pide.
-3. Agrega la carpeta `UMBRA` como proyecto.
-4. Abre el proyecto con Unity `6000.5.2f1`.
-5. Abre `Assets/Scenes/Level_01_Forest.unity`.
-6. Si las escenas no aparecen, usa `Tools > UMBRA > Rebuild All Five Levels`.
+- En Unity: abrir `Assets/Scenes/Chapter_01_El_Fondo.unity` y pulsar Play.
+- En Windows: ejecutar `Builds/Windows/UMBRAL.exe`.
+- Para regenerar las escenas: `Tools > UMBRAL > Rebuild Complete Game`.
+- Inventario completo: `INVENTARIO_ASSETS.md`.
+- Física, layers, triggers y Rigidbody2D: `REPORTE_TECNICO_UNITY.md`.
+- Resultados de pruebas: `QA_TEST_REPORT.md`.
 
 ## Controles
 
-- `A/D` o flechas: moverse.
-- `Space`, `W` o flecha arriba: saltar.
-- `S` o flecha abajo: agacharse.
-- Empuja el cubo de memoria caminando contra el; manten `E` para jalarlo.
-- `W/S` o flechas verticales: trepar cuando estas sobre la escalera.
-- `Esc`: pausar o continuar.
-- Toca un farol de eco para actualizar el punto de reaparicion.
-- Recupera el fragmento de eco para abrir el umbral de memoria.
-- Evita las trampas.
-- `R`: recargar el nivel desde el ultimo checkpoint y restaurar cajas, trampas y mecanismos.
+- `A/D` o flechas: caminar.
+- `Shift`: correr.
+- `Espacio`, `W` o flecha arriba: saltar.
+- `S` o flecha abajo: agacharse o bajar al trepar.
+- `E`: jalar objetos, accionar palancas y entrar/salir de escondites.
+- `Esc`: pausa y control de volumen.
+- `R`: reiniciar desde el ultimo checkpoint.
+- En la portada: `Enter` inicia, `C` continua el capitulo desbloqueado y `N` empieza una partida nueva.
 
-## Que incluye
+## Recorrido
 
-- Movimiento 2D basico con `Rigidbody2D`.
-- Salto y deteccion de suelo.
-- Cubos de memoria que se pueden empujar y jalar con `E`.
-- Placas de resonancia y diapasones conectados a peligros.
-- Lineas luminosas que muestran que placa controla cada peligro.
-- Peligros que se retraen sin desaparecer cuando un mecanismo los desactiva.
-- Escaleras de cintas, nudos de espinas y engranajes moviles.
-- Resaltados pulsantes y avisos breves para cajas, fragmentos y escaleras.
-- Faroles de eco que funcionan como checkpoints.
-- Guardado automatico del farol y del fragmento con `PlayerPrefs`.
-- Fragmentos de eco, umbrales de memoria y portales de regreso.
-- Umbrales altos de energia que no pueden evitarse saltando por encima.
-- Cinco recuerdos conectados: jardin, ciudad de cartas, taller de horas,
-  biblioteca bajo la lluvia y observatorio.
-- Progresion automatica de un nivel al siguiente.
-- Meta final y creditos completos al terminar el nivel 5.
-- Menu inicial, pausa, muerte/reinicio rapido y creditos.
-- Ambiente musical generado por codigo y efectos de pasos, salto, eco, mecanismos y caida.
-- Camara que sigue al jugador.
-- Estetica de collage artesanal con papel, tela, ceramica y color.
-- Cinco fondos originales, una hoja de objetos y terreno cosido.
-- Lumo cuenta con 12 cuadros para quieto, carrera, salto y agachado.
-- Al recoger un fragmento aparece un pulso de color y el mensaje `ECO RECUPERADO`.
-- Plataformas con saltos mas tolerantes y un checkpoint adicional en el tramo largo del nivel 5.
+1. El Fondo: despertar, caja y placa de presion, trepar, primera amenaza y susto ambiental.
+2. Los Abandonados: plataformas moviles, alma perseguidora, escondite y palanca.
+3. La Carne: tunel, arquitectura roja, demonio con vigilancia y persecucion.
+4. El Peso: ascensores, plataformas de precision, culpa y amenaza avanzada.
+5. El Umbral: combina mecanismos, persecucion final, luz y despertar en el hospital.
 
-## Los cinco recuerdos
+Los enemigos respetan obstaculos, tienen estados configurables y no detectan a un jugador escondido.
+Los seis eventos de terror usan apariciones del fondo o primer plano, cambios de entorno y camara;
+se guardan para no repetirse al morir. La muerte recarga la escena y restaura los acertijos conservando
+el checkpoint.
 
-1. El Jardin de las Primeras Voces - infancia.
-2. La Ciudad de las Cartas No Enviadas - adolescencia.
-3. El Taller de las Horas Prestadas - adultez.
-4. La Biblioteca Bajo la Lluvia - vejez.
-5. El Observatorio de los Ecos que Regresan - aceptacion.
+La revision visual v2 incorpora sprites propios para almas, demonios, escondites, manifestaciones y
+pistas hospitalarias. Las trampas comunican visualmente cuando estan desarmadas, puertas y palancas
+muestran su tecla de interaccion y las plataformas transportan al jugador sin reparentarlo.
 
-## Relacion con el PDF
+La revision integral posterior garantiza soporte bajo los objetivos, continuidad de rutas, escaleras
+atravesables, palancas accesibles antes de los peligros que controlan y salidas completamente apoyadas.
+Unity conserva ahora el ultimo capitulo abierto en vez de regresar siempre al primero al recompilar.
 
-Esta entrega mantiene los lineamientos del avance: desplazamiento lateral,
-exploracion, acertijos ambientales, cinco etapas de vida y un cierre sobre la
-aceptacion. La identidad del Archivo de los Ecos desarrolla esos puntos con una
-direccion propia y evita depender de la apariencia de otro juego.
+## Recursos pendientes
 
-## Siguiente paso recomendado
-
-Agregar animaciones especificas de trepar, empujar y morir, y realizar playtests
-con distintos jugadores para ajustar la dificultad.
+Los fondos, sprites y sonidos actuales son recursos provisionales del proyecto. Para una entrega final
+conviene sustituir las criaturas, objetos hospitalarios y animaciones de empujar, esconderse y morir,
+y realizar playtests humanos de dificultad y ritmo.

@@ -2,62 +2,61 @@ using UnityEngine;
 
 public class DeathTrap : MonoBehaviour
 {
-    public bool IsArmed { get; private set; } = true;
+    [Header("Strategy pattern")]
+    public TrapResponseMode responseMode = TrapResponseMode.Lethal;
 
-    private Collider2D trapCollider;
-    private SpriteRenderer trapRenderer;
+    private Collider2D hitbox;
+    private SpriteRenderer body;
     private SimpleMover2D mover;
-    private Color armedColor;
-    private Vector3 armedScale;
+    private Vector3 originalScale;
+    private ITrapResponseStrategy responseStrategy;
+
+    public string ActiveStrategyName => responseStrategy != null ? responseStrategy.Name : "NotConfigured";
 
     private void Awake()
     {
-        trapCollider = GetComponent<Collider2D>();
-        trapRenderer = GetComponent<SpriteRenderer>();
+        hitbox = GetComponent<Collider2D>();
+        body = GetComponent<SpriteRenderer>();
         mover = GetComponent<SimpleMover2D>();
-        armedColor = trapRenderer != null ? trapRenderer.color : Color.white;
-        armedScale = transform.localScale;
+        originalScale = transform.localScale;
+        ConfigureStrategy();
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
+    public void SetResponseMode(TrapResponseMode mode)
     {
-        if (!IsArmed)
-        {
-            return;
-        }
+        responseMode = mode;
+        ConfigureStrategy();
+    }
 
-        PlayerRespawn player = other.GetComponent<PlayerRespawn>();
-        if (player != null)
-        {
-            player.Die();
-        }
+    private void ConfigureStrategy()
+    {
+        responseStrategy = responseMode == TrapResponseMode.WarningOnly
+            ? new WarningTrapResponseStrategy()
+            : new LethalTrapResponseStrategy();
     }
 
     public void SetArmed(bool armed)
     {
-        IsArmed = armed;
-        if (trapCollider != null)
+        enabled = armed;
+        if (hitbox != null) hitbox.enabled = armed;
+        if (mover != null) mover.enabled = armed;
+        transform.localScale = armed
+            ? originalScale
+            : new Vector3(originalScale.x, originalScale.y * 0.28f, originalScale.z);
+        if (body != null)
         {
-            trapCollider.enabled = armed;
+            Color color = body.color;
+            color.a = armed ? 1f : 0.28f;
+            body.color = color;
         }
+    }
 
-        if (mover != null)
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        PlayerRespawn player = other.GetComponent<PlayerRespawn>();
+        if (player != null)
         {
-            mover.enabled = armed;
-        }
-
-        if (trapRenderer != null)
-        {
-            trapRenderer.color = armed
-                ? armedColor
-                : new Color(0.48f, 0.95f, 0.84f, 0.72f);
-        }
-
-        if (mover == null)
-        {
-            transform.localScale = armed
-                ? armedScale
-                : new Vector3(armedScale.x, armedScale.y * 0.32f, armedScale.z);
+            responseStrategy?.Execute(player, this);
         }
     }
 }

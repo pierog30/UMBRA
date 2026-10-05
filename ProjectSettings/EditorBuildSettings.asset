@@ -6,18 +6,18 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Level_01_Forest.unity
-    guid: 048349d1b65372e4d9870590b95bb75e
+    path: Assets/Scenes/Chapter_01_El_Fondo.unity
+    guid: bd49fe482ee6a4545ab211148f4f77c4
   - enabled: 1
-    path: Assets/Scenes/Level_02_Ruins.unity
-    guid: cb940293a696d0844aed7748ce5cedfc
+    path: Assets/Scenes/Chapter_02_Los_Abandonados.unity
+    guid: 2eb551e95da8e0a4fa622fed291dfa7f
   - enabled: 1
-    path: Assets/Scenes/Level_03_Factory.unity
-    guid: ed5d0283cc1c0da4fbe677f7c648542a
+    path: Assets/Scenes/Chapter_03_La_Carne.unity
+    guid: 029f8add6d4e78c44a26bd042df8063d
   - enabled: 1
-    path: Assets/Scenes/Level_04_Caverns.unity
-    guid: 3fbab3afbf0fe2c4da969bb6fdf3f8cf
+    path: Assets/Scenes/Chapter_04_El_Peso.unity
+    guid: f748fd80523649e46a3d6cd865307fdb
   - enabled: 1
-    path: Assets/Scenes/Level_05_Escape.unity
-    guid: 5062a265978390a439b6081d0ae699bc
+    path: Assets/Scenes/Chapter_05_El_Umbral.unity
+    guid: 1a1bb7e22ecfdcb44be34053575b94d2
   m_configObjects: {}

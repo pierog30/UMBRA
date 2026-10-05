@@ -3,59 +3,44 @@ using UnityEngine;
 public class DoorGoal : MonoBehaviour
 {
     public bool needsKey = true;
-    public SpriteRenderer barrierRenderer;
-
-    private bool showedUnlockedHint;
-    private float lastLockedFeedbackAt = -10f;
-
-    private void Update()
-    {
-        bool unlocked = GameManager.Instance != null && GameManager.Instance.hasKey;
-        if (barrierRenderer != null)
-        {
-            float pulse = (Mathf.Sin(Time.unscaledTime * 3.5f) + 1f) * 0.5f;
-            barrierRenderer.color = unlocked
-                ? new Color(0.35f, 1f, 0.82f, Mathf.Lerp(0.32f, 0.58f, pulse))
-                : new Color(1f, 0.36f, 0.25f, Mathf.Lerp(0.42f, 0.66f, pulse));
-        }
-
-        if (unlocked && !showedUnlockedHint)
-        {
-            showedUnlockedHint = true;
-            GameManager.Instance?.ShowHint("EL UMBRAL RESPONDE AL ECO", 2f);
-        }
-    }
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        TryOpen(collision.collider);
-    }
+    private bool playerNearby;
 
     private void OnCollisionStay2D(Collision2D collision)
     {
-        TryOpen(collision.collider);
-    }
+        PlayerController2D player = collision.collider.GetComponent<PlayerController2D>();
+        if (player == null)
+        {
+            return;
+        }
+        playerNearby = true;
 
-    private void TryOpen(Collider2D other)
-    {
-        if (other.GetComponent<PlayerController2D>() == null)
+        GameManager manager = GameManager.Instance;
+        if (manager == null || (needsKey && !manager.hasKey))
         {
             return;
         }
 
-        if (needsKey && (GameManager.Instance == null || !GameManager.Instance.hasKey))
-        {
-            if (Time.unscaledTime - lastLockedFeedbackAt > 1f)
-            {
-                lastLockedFeedbackAt = Time.unscaledTime;
-                GameManager.Instance?.ShowHint("NECESITAS EL FRAGMENTO DE ECO", 2f);
-                UmbraAudio.Instance?.PlayMechanism();
-            }
-
-            return;
-        }
+        if (!Input.GetKey(KeyCode.E)) return;
 
         UmbraAudio.Instance?.PlayMechanism();
+        UmbraGameEvents.PublishInteraction("Puerta abierta");
         gameObject.SetActive(false);
+    }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.collider.GetComponent<PlayerController2D>() != null) playerNearby = false;
+    }
+
+    private void OnGUI()
+    {
+        GameManager manager = GameManager.Instance;
+        if (!playerNearby || manager == null || !manager.CanPlayerMove) return;
+        GUIStyle style = new GUIStyle(GUI.skin.label);
+        style.alignment = TextAnchor.MiddleCenter;
+        style.fontSize = 15;
+        style.normal.textColor = Color.white;
+        string prompt = needsKey && !manager.hasKey ? "FALTA LA LLAVE" : "E — ABRIR";
+        GUI.Label(new Rect((Screen.width - 240f) * 0.5f, Screen.height - 82f, 240f, 32f), prompt, style);
     }
 }

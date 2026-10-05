@@ -59,11 +59,6 @@ public class PlayerSpriteAnimator : MonoBehaviour
 
     private Sprite[] ChooseFrames()
     {
-        if (GameManager.Instance != null && !GameManager.Instance.gameStarted)
-        {
-            return idleFrames;
-        }
-
         if (controller.IsCrouching)
         {
             return crouchFrames;

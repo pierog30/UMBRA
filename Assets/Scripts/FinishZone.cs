@@ -6,7 +6,11 @@ public class FinishZone : MonoBehaviour
     {
         if (other.GetComponent<PlayerController2D>() != null)
         {
-            GameManager.Instance.CompleteLevel();
+            GameManager manager = GameManager.Instance;
+            if (manager != null)
+            {
+                manager.CompleteLevel();
+            }
         }
     }
 }

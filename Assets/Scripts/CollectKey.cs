@@ -17,7 +17,13 @@ public class CollectKey : MonoBehaviour
             return;
         }
 
-        GameManager.Instance.CollectKey();
+        GameManager manager = GameManager.Instance;
+        if (manager == null)
+        {
+            return;
+        }
+
+        manager.CollectKey();
         gameObject.SetActive(false);
     }
 }

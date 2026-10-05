@@ -1,6 +1,5 @@
 using UnityEngine;
 
-[DefaultExecutionOrder(50)]
 [RequireComponent(typeof(Rigidbody2D))]
 public class PushPullObject2D : MonoBehaviour
 {
@@ -49,17 +48,6 @@ public class PushPullObject2D : MonoBehaviour
                     targetSpeed,
                     acceleration * Time.fixedDeltaTime);
                 body.linearVelocity = new Vector2(nextSpeed, body.linearVelocity.y);
-                if (isPulling)
-                {
-                    Rigidbody2D playerBody = player.GetComponent<Rigidbody2D>();
-                    if (playerBody != null &&
-                        Mathf.Sign(playerBody.linearVelocity.x) == Mathf.Sign(targetSpeed) &&
-                        Mathf.Abs(playerBody.linearVelocity.x) > Mathf.Abs(targetSpeed))
-                    {
-                        playerBody.linearVelocity = new Vector2(targetSpeed, playerBody.linearVelocity.y);
-                    }
-                }
-
                 isBeingControlled = true;
             }
         }
@@ -78,13 +66,5 @@ public class PushPullObject2D : MonoBehaviour
         }
 
         body.linearVelocity = new Vector2(horizontalSpeed, body.linearVelocity.y);
-    }
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.collider.GetComponent<PlayerController2D>() != null)
-        {
-            GameManager.Instance?.ShowHint("EMPUJA / MANTEN E PARA JALAR", 2f);
-        }
     }
 }

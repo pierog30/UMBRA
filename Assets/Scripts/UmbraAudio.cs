@@ -15,6 +15,10 @@ public class UmbraAudio : MonoBehaviour
     private AudioClip deathClip;
     private AudioClip pickupClip;
     private AudioClip mechanismClip;
+    private AudioClip landingClip;
+    private AudioClip scareClip;
+    private AudioClip breathClip;
+    private float breathTimer;
 
     private void Awake()
     {
@@ -28,7 +32,7 @@ public class UmbraAudio : MonoBehaviour
         ambienceSource = gameObject.AddComponent<AudioSource>();
         effectsSource = gameObject.AddComponent<AudioSource>();
 
-        ambienceSource.clip = CreateArchiveAmbience();
+        ambienceSource.clip = CreateWindClip();
         ambienceSource.loop = true;
         ambienceSource.volume = 0.42f;
         ambienceSource.spatialBlend = 0f;
@@ -37,11 +41,29 @@ public class UmbraAudio : MonoBehaviour
         effectsSource.volume = 0.8f;
         effectsSource.spatialBlend = 0f;
 
-        jumpClip = CreateTone("Ribbon Jump", 0.14f, 260f, 510f, 0.38f);
-        stepClip = CreateTone("Paper Step", 0.08f, 135f, 82f, 0.30f);
-        deathClip = CreateTone("Lost Memory", 0.42f, 210f, 72f, 0.48f);
-        pickupClip = CreateTone("Echo Recovered", 0.38f, 440f, 980f, 0.46f);
-        mechanismClip = CreateTone("Resonance", 0.28f, 170f, 285f, 0.46f);
+        jumpClip = CreateTone("Jump", 0.14f, 210f, 430f, 0.42f);
+        stepClip = CreateTone("Step", 0.08f, 115f, 68f, 0.36f);
+        deathClip = CreateTone("Death", 0.45f, 165f, 42f, 0.55f);
+        pickupClip = CreateTone("Pickup", 0.3f, 420f, 820f, 0.45f);
+        mechanismClip = CreateTone("Mechanism", 0.26f, 135f, 62f, 0.5f);
+        landingClip = CreateTone("Heavy landing", 0.18f, 92f, 48f, 0.5f);
+        scareClip = CreateTone("Terror sting", 0.55f, 72f, 610f, 0.58f);
+        breathClip = CreateTone("Breath", 0.7f, 58f, 42f, 0.18f);
+        ApplySavedVolume();
+    }
+
+    private void Update()
+    {
+        if (GameManager.Instance == null || !GameManager.Instance.CanPlayerMove)
+        {
+            return;
+        }
+        breathTimer -= Time.unscaledDeltaTime;
+        if (breathTimer <= 0f)
+        {
+            breathTimer = 3.4f;
+            Play(breathClip);
+        }
     }
 
     public void PlayJump() => Play(jumpClip);
@@ -49,10 +71,17 @@ public class UmbraAudio : MonoBehaviour
     public void PlayDeath() => Play(deathClip);
     public void PlayPickup() => Play(pickupClip);
     public void PlayMechanism() => Play(mechanismClip);
+    public void PlayLanding() => Play(landingClip);
+    public void PlayScare() => Play(scareClip);
+
+    public void ApplySavedVolume()
+    {
+        AudioListener.volume = PlayerPrefs.GetFloat("UmbralMasterVolume", 0.8f);
+    }
 
     private void Play(AudioClip clip)
     {
-        if (clip != null && effectsSource != null)
+        if (this != null && effectsSource != null && clip != null)
         {
             effectsSource.PlayOneShot(clip);
         }
@@ -60,34 +89,30 @@ public class UmbraAudio : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (Instance == this)
-        {
-            Instance = null;
-        }
+        if (Instance == this) Instance = null;
     }
 
-    private static AudioClip CreateArchiveAmbience()
+    private static AudioClip CreateWindClip()
     {
         const int sampleRate = 44100;
         const float duration = 6f;
         int sampleCount = Mathf.RoundToInt(sampleRate * duration);
         float[] samples = new float[sampleCount];
         var random = new System.Random(27);
-        float filteredPaper = 0f;
+        float filteredNoise = 0f;
 
         for (int i = 0; i < sampleCount; i++)
         {
             float noise = ((float)random.NextDouble() * 2f) - 1f;
-            filteredPaper = Mathf.Lerp(filteredPaper, noise, 0.025f);
+            filteredNoise = Mathf.Lerp(filteredNoise, noise, 0.04f);
             float time = i / (float)sampleRate;
-            float breath = 0.78f + (Mathf.Sin(time * Mathf.PI * 2f * 0.10f) * 0.22f);
-            float chord = (Mathf.Sin(time * Mathf.PI * 2f * 110f) * 0.07f) +
-                (Mathf.Sin(time * Mathf.PI * 2f * 165f) * 0.04f) +
-                (Mathf.Sin(time * Mathf.PI * 2f * 220f) * 0.025f);
-            samples[i] = ((filteredPaper * 0.12f) + chord) * breath;
+            float breath = 0.78f + (Mathf.Sin(time * Mathf.PI * 2f * 0.12f) * 0.22f);
+            float drone = (Mathf.Sin(time * Mathf.PI * 2f * 92f) * 0.09f) +
+                (Mathf.Sin(time * Mathf.PI * 2f * 138f) * 0.035f);
+            samples[i] = ((filteredNoise * 0.55f) + drone) * breath;
         }
 
-        AudioClip clip = AudioClip.Create("Archive Ambience", sampleCount, 1, sampleRate, false);
+        AudioClip clip = AudioClip.Create("Umbra Wind", sampleCount, 1, sampleRate, false);
         clip.SetData(samples, 0);
         return clip;
     }
