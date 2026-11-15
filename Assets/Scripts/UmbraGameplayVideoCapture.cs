@@ -141,7 +141,7 @@ public sealed class UmbraGameplayVideoCapture : MonoBehaviour
             yield return Hold(1.2f);
         }
 
-        phase = "SEMANA 8 · IMPULSO UMBRAL CON Q Y RECARGA VISUAL";
+        phase = "IMPULSO UMBRAL · Q ACTIVA EL DASH Y LA RECARGA VISUAL";
         ShadowDash2D dash = player.GetComponent<ShadowDash2D>();
         if (dash != null)
         {

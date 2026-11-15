@@ -54,13 +54,13 @@ public class PlayerController2D : MonoBehaviour
     private void Update()
     {
         bool canMove = GameManager.Instance == null || GameManager.Instance.CanPlayerMove;
-        HorizontalInput = canMove ? Input.GetAxisRaw("Horizontal") : 0f;
-        verticalInput = canMove ? Input.GetAxisRaw("Vertical") : 0f;
-        IsInteracting = canMove && Input.GetKey(KeyCode.E);
+        HorizontalInput = canMove ? UmbraInput.Horizontal : 0f;
+        verticalInput = canMove ? UmbraInput.Vertical : 0f;
+        IsInteracting = canMove && UmbraInput.InteractHeld;
         IsGrounded = Physics2D.OverlapCircle(groundCheck.position, groundRadius, groundLayer);
-        IsRunning = canMove && !IsCrouching && Input.GetKey(KeyCode.LeftShift);
+        IsRunning = canMove && !IsCrouching && UmbraInput.RunHeld;
 
-        if (canMove && activeHidingSpot != null && Input.GetKeyDown(KeyCode.E))
+        if (canMove && activeHidingSpot != null && UmbraInput.InteractDown)
         {
             SetHidden(!IsHidden);
         }
@@ -74,7 +74,7 @@ public class PlayerController2D : MonoBehaviour
 
         coyoteCounter = IsGrounded ? coyoteTime : coyoteCounter - Time.deltaTime;
         jumpBufferCounter -= Time.deltaTime;
-        if (canMove && (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow)))
+        if (canMove && UmbraInput.JumpDown)
         {
             jumpBufferCounter = jumpBufferTime;
         }
@@ -83,7 +83,7 @@ public class PlayerController2D : MonoBehaviour
             (IsClimbing || Mathf.Abs(verticalInput) > 0.05f);
 
         bool wantsCrouch = canMove && IsGrounded && !IsClimbing &&
-            (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow));
+            UmbraInput.CrouchHeld;
         IsCrouching = wantsCrouch || (IsCrouching && IsGrounded && HasCeiling());
         UpdateCrouchCollider();
 
@@ -96,7 +96,7 @@ public class PlayerController2D : MonoBehaviour
         }
 
         if (canMove &&
-            (Input.GetKeyUp(KeyCode.Space) || Input.GetKeyUp(KeyCode.W) || Input.GetKeyUp(KeyCode.UpArrow)) &&
+            UmbraInput.JumpUp &&
             rb.linearVelocity.y > 0f)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * 0.55f);
@@ -110,7 +110,7 @@ public class PlayerController2D : MonoBehaviour
         }
         wasGrounded = IsGrounded;
 
-        if (canMove && Input.GetKeyDown(KeyCode.R))
+        if (canMove && UmbraInput.RestartDown)
         {
             if (GameManager.Instance != null)
             {

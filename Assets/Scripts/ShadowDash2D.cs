@@ -41,7 +41,7 @@ public sealed class ShadowDash2D : MonoBehaviour
             return;
         }
 
-        if (Input.GetKeyDown(dashKey) || Input.GetKeyDown(KeyCode.RightControl))
+        if (UmbraInput.DashDown)
         {
             TryStartDash(0f);
         }
@@ -146,7 +146,8 @@ public sealed class ShadowDash2D : MonoBehaviour
         label.fontSize = 14;
         label.fontStyle = FontStyle.Bold;
         label.normal.textColor = Color.white;
-        GUI.Label(new Rect(x, y - 6f, width, 22f), IsReady ? "Q  IMPULSO UMBRAL" : "RECARGANDO IMPULSO", label);
+        string readyLabel = UmbraInput.MobileMode ? "IMPULSO UMBRAL" : "Q  IMPULSO UMBRAL";
+        GUI.Label(new Rect(x, y - 6f, width, 22f), IsReady ? readyLabel : "RECARGANDO IMPULSO", label);
 
         Color previous = GUI.color;
         GUI.color = new Color(0.05f, 0.04f, 0.08f, 0.85f);

@@ -33,6 +33,8 @@ La version actual es jugable de principio a fin con arte y sonido provisionales 
 5. El Umbral: combina mecanismos, persecucion final, luz y despertar en el hospital.
 
 Los enemigos respetan obstaculos, tienen estados configurables y no detectan a un jugador escondido.
+La revision de la Semana 11 centraliza las transiciones de Patrol, Watch, Chase, Search y Return,
+expone el estado actual para depuracion y agrega una respuesta visual por color y pulsacion de escala.
 Los seis eventos de terror usan apariciones del fondo o primer plano, cambios de entorno y camara;
 se guardan para no repetirse al morir. La muerte recarga la escena y restaura los acertijos conservando
 el checkpoint.
@@ -50,3 +52,31 @@ Unity conserva ahora el ultimo capitulo abierto en vez de regresar siempre al pr
 Los fondos, sprites y sonidos actuales son recursos provisionales del proyecto. Para una entrega final
 conviene sustituir las criaturas, objetos hospitalarios y animaciones de empujar, esconderse y morir,
 y realizar playtests humanos de dificultad y ritmo.
+
+La procedencia de paquetes oficiales y recursos provisionales se documenta en
+`Assets/Documentation/Recursos_Externos_Semana11.md`.
+
+## Semana 12
+
+- Networking se mantiene fuera del alcance jugable actual porque UMBRA es una experiencia narrativa para un jugador.
+- `HorrorEvent2D` expone estados del escenario y anima desplazamiento, escala y color al responder al jugador.
+- Seis eventos distribuidos en los cinco capítulos muestran cambios ambientales, apariciones y pulsos de cámara.
+- El análisis técnico está disponible en `Assets/Documentation/Networking_y_Escenario_Semana12.md`.
+
+## Semana 13
+
+- Cada capítulo contiene un único `AudioListener` en `Main Camera` y un `UmbraAudio` en `Audio Ambiente`.
+- `UmbraAudio` organiza dos canales: ambiente en bucle y efectos mediante `PlayOneShot`.
+- Los recursos se generan con `AudioClip.Create`, sin dependencias ni licencias externas.
+- Salto, pasos, aterrizaje, recogida, mecanismos, muerte y terror responden a eventos del gameplay.
+- La mezcla guarda volumen maestro, ambiente y efectos. Los eventos de terror y muerte reducen temporalmente el ambiente.
+- La documentación técnica se encuentra en `Assets/Documentation/Audio_y_Multimedia_Semana13.md`.
+
+## Semana 14
+
+- `UmbraInput` unifica teclado y entrada táctil sin cambiar las mecánicas existentes.
+- `UmbraMobileControls` crea cruceta y botones para salto, impulso, acción, correr, pausa y reinicio.
+- La interfaz usa orientación horizontal, escalado por resolución y `Screen.safeArea`.
+- F10 activa una vista móvil de prueba en el Editor o en Windows.
+- La compilación completa de Unity finalizó sin errores y la entrada táctil inició el capítulo durante Play.
+- El análisis y los pasos pendientes para exportar Android se documentan en `Assets/Documentation/Adaptacion_Movil_Semana14.md`.

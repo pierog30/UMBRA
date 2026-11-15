@@ -11,7 +11,7 @@ public class LeverSwitch2D : MonoBehaviour
 
     private void Update()
     {
-        if (!activated && playerNearby && Input.GetKeyDown(KeyCode.E))
+        if (!activated && playerNearby && UmbraInput.InteractDown)
         {
             activated = true;
             if (targetTrap != null)
@@ -37,7 +37,8 @@ public class LeverSwitch2D : MonoBehaviour
         style.alignment = TextAnchor.MiddleCenter;
         style.fontSize = 15;
         style.normal.textColor = Color.white;
-        GUI.Label(new Rect((Screen.width - 260f) * 0.5f, Screen.height - 82f, 260f, 32f), "E — ACCIONAR PALANCA", style);
+        string prompt = UmbraInput.MobileMode ? "ACCIÓN — PALANCA" : "E — ACCIONAR PALANCA";
+        GUI.Label(new Rect((Screen.width - 260f) * 0.5f, Screen.height - 82f, 260f, 32f), prompt, style);
     }
 
     private void OnTriggerEnter2D(Collider2D other)

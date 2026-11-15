@@ -108,7 +108,7 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        if (!gameStarted && (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space)))
+        if (!gameStarted && UmbraInput.ConfirmDown)
         {
             gameStarted = true;
             Time.timeScale = 1f;
@@ -127,7 +127,7 @@ public class GameManager : MonoBehaviour
             StartNewGame();
         }
 
-        if (gameStarted && !finishedGame && !isDead && Input.GetKeyDown(KeyCode.Escape))
+        if (gameStarted && !finishedGame && !isDead && UmbraInput.PauseDown)
         {
             isPaused = !isPaused;
             Time.timeScale = isPaused ? 0f : 1f;
@@ -157,12 +157,12 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        if (isPaused && Input.GetKeyDown(KeyCode.R))
+        if (isPaused && UmbraInput.RestartDown)
         {
             RestartFromCheckpoint();
         }
 
-        if (finishedGame && (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space)))
+        if (finishedGame && UmbraInput.ConfirmDown)
         {
             if (LevelNumber < TotalLevels)
             {
@@ -335,8 +335,14 @@ public class GameManager : MonoBehaviour
             centered.fontSize = 16;
             centered.fontStyle = FontStyle.Normal;
             GUI.Label(CenteredRect(-24f, 420f, 32f), "CAPITULO " + LevelNumber + " — " + ChapterNames[Mathf.Clamp(sceneIndex, 0, 4)], centered);
-            GUI.Label(CenteredRect(18f, 420f, 32f), "ENTER: COMENZAR ASCENSO   C: CONTINUAR   N: NUEVA PARTIDA", centered);
-            GUI.Label(CenteredRect(52f, 420f, 28f), "A/D MOVER · SHIFT CORRER · ESPACIO SALTAR · E INTERACTUAR", centered);
+            string startPrompt = UmbraInput.MobileMode
+                ? "TOCA SALTAR O ACCIÓN PARA COMENZAR"
+                : "ENTER: COMENZAR ASCENSO   C: CONTINUAR   N: NUEVA PARTIDA";
+            string controlsPrompt = UmbraInput.MobileMode
+                ? "CRUCETA MOVER · SALTAR · IMPULSO · ACCIÓN"
+                : "A/D MOVER · SHIFT CORRER · ESPACIO SALTAR · E INTERACTUAR";
+            GUI.Label(CenteredRect(18f, 420f, 32f), startPrompt, centered);
+            GUI.Label(CenteredRect(52f, 420f, 28f), controlsPrompt, centered);
         }
 
         if (isPaused)
@@ -345,7 +351,7 @@ public class GameManager : MonoBehaviour
             GUI.Label(CenteredRect(-48f, 420f, 45f), "PAUSA", centered);
             centered.fontSize = 16;
             centered.fontStyle = FontStyle.Normal;
-            GUI.Label(CenteredRect(5f, 470f, 35f), "ESC CONTINUAR     R REINICIAR", centered);
+            GUI.Label(CenteredRect(5f, 470f, 35f), UmbraInput.MobileMode ? "II CONTINUAR     R REINICIAR" : "ESC CONTINUAR     R REINICIAR", centered);
             GUI.Label(CenteredRect(42f, 470f, 28f), "VOLUMEN", centered);
             masterVolume = GUI.HorizontalSlider(CenteredRect(76f, 280f, 24f), masterVolume, 0f, 1f);
             AudioListener.volume = masterVolume;
@@ -367,7 +373,7 @@ public class GameManager : MonoBehaviour
             GUI.Label(CenteredRect(-55f, 460f, 45f), ChapterNames[Mathf.Clamp(sceneIndex, 0, 4)] + " SUPERADO", centered);
             centered.fontSize = 16;
             centered.fontStyle = FontStyle.Normal;
-            GUI.Label(CenteredRect(25f, 460f, 35f), "ENTER - SIGUIENTE NIVEL", centered);
+            GUI.Label(CenteredRect(25f, 460f, 35f), UmbraInput.MobileMode ? "TOCA SALTAR O ACCIÓN" : "ENTER - SIGUIENTE NIVEL", centered);
         }
 
         if (hospitalEnding)

@@ -1,12 +1,35 @@
+using System;
 using UnityEngine;
 
 public class UmbraAudio : MonoBehaviour
 {
+    public enum SoundEvent
+    {
+        Jump,
+        Step,
+        Death,
+        Pickup,
+        Mechanism,
+        Landing,
+        Scare,
+        Breath
+    }
+
     public static UmbraAudio Instance { get; private set; }
 
     public bool IsConfigured => ambienceSource != null && effectsSource != null &&
-        ambienceSource.clip != null && ambienceSource.volume >= 0.35f &&
-        effectsSource.volume >= 0.65f;
+        ambienceSource.clip != null && ambienceVolume > 0f && effectsVolume > 0f;
+    public float AmbienceVolume => ambienceVolume;
+    public float EffectsVolume => effectsVolume;
+    public string LastEvent { get; private set; } = "None";
+    public event Action<SoundEvent> SoundPlayed;
+
+    [Header("Mix de audio")]
+    [SerializeField, Range(0f, 1f)] private float ambienceVolume = 0.42f;
+    [SerializeField, Range(0f, 1f)] private float effectsVolume = 0.8f;
+    [SerializeField, Range(0f, 1f)] private float scareDuckVolume = 0.16f;
+    [SerializeField, Min(0.05f)] private float scareDuckDuration = 0.7f;
+    [SerializeField, Min(0.1f)] private float ambienceFadeSpeed = 2.8f;
 
     private AudioSource ambienceSource;
     private AudioSource effectsSource;
@@ -19,6 +42,10 @@ public class UmbraAudio : MonoBehaviour
     private AudioClip scareClip;
     private AudioClip breathClip;
     private float breathTimer;
+    private float ambienceDuckTimer;
+
+    private const string AmbienceVolumeKey = "UmbraAmbienceVolume";
+    private const string EffectsVolumeKey = "UmbraEffectsVolume";
 
     private void Awake()
     {
@@ -34,12 +61,15 @@ public class UmbraAudio : MonoBehaviour
 
         ambienceSource.clip = CreateWindClip();
         ambienceSource.loop = true;
-        ambienceSource.volume = 0.42f;
+        ambienceSource.playOnAwake = false;
         ambienceSource.spatialBlend = 0f;
+        ambienceSource.priority = 128;
         ambienceSource.Play();
 
-        effectsSource.volume = 0.8f;
+        effectsSource.loop = false;
+        effectsSource.playOnAwake = false;
         effectsSource.spatialBlend = 0f;
+        effectsSource.priority = 64;
 
         jumpClip = CreateTone("Jump", 0.14f, 210f, 430f, 0.42f);
         stepClip = CreateTone("Step", 0.08f, 115f, 68f, 0.36f);
@@ -58,32 +88,66 @@ public class UmbraAudio : MonoBehaviour
         {
             return;
         }
-        breathTimer -= Time.unscaledDeltaTime;
+
+        float deltaTime = Time.unscaledDeltaTime;
+        breathTimer -= deltaTime;
+        ambienceDuckTimer = Mathf.Max(0f, ambienceDuckTimer - deltaTime);
+        float targetAmbience = ambienceDuckTimer > 0f
+            ? Mathf.Min(ambienceVolume, scareDuckVolume)
+            : ambienceVolume;
+        ambienceSource.volume = Mathf.MoveTowards(
+            ambienceSource.volume,
+            targetAmbience,
+            ambienceFadeSpeed * deltaTime);
+
         if (breathTimer <= 0f)
         {
             breathTimer = 3.4f;
-            Play(breathClip);
+            Play(SoundEvent.Breath, breathClip);
         }
     }
 
-    public void PlayJump() => Play(jumpClip);
-    public void PlayStep() => Play(stepClip);
-    public void PlayDeath() => Play(deathClip);
-    public void PlayPickup() => Play(pickupClip);
-    public void PlayMechanism() => Play(mechanismClip);
-    public void PlayLanding() => Play(landingClip);
-    public void PlayScare() => Play(scareClip);
+    public void PlayJump() => Play(SoundEvent.Jump, jumpClip);
+    public void PlayStep() => Play(SoundEvent.Step, stepClip);
+    public void PlayDeath() => Play(SoundEvent.Death, deathClip, true);
+    public void PlayPickup() => Play(SoundEvent.Pickup, pickupClip);
+    public void PlayMechanism() => Play(SoundEvent.Mechanism, mechanismClip);
+    public void PlayLanding() => Play(SoundEvent.Landing, landingClip);
+    public void PlayScare() => Play(SoundEvent.Scare, scareClip, true);
 
     public void ApplySavedVolume()
     {
         AudioListener.volume = PlayerPrefs.GetFloat("UmbralMasterVolume", 0.8f);
+        ambienceVolume = PlayerPrefs.GetFloat(AmbienceVolumeKey, ambienceVolume);
+        effectsVolume = PlayerPrefs.GetFloat(EffectsVolumeKey, effectsVolume);
+        if (ambienceSource != null) ambienceSource.volume = ambienceVolume;
+        if (effectsSource != null) effectsSource.volume = effectsVolume;
     }
 
-    private void Play(AudioClip clip)
+    public void SetMixVolumes(float ambience, float effects, bool save = true)
+    {
+        ambienceVolume = Mathf.Clamp01(ambience);
+        effectsVolume = Mathf.Clamp01(effects);
+        if (ambienceSource != null) ambienceSource.volume = ambienceVolume;
+        if (effectsSource != null) effectsSource.volume = effectsVolume;
+
+        if (!save) return;
+        PlayerPrefs.SetFloat(AmbienceVolumeKey, ambienceVolume);
+        PlayerPrefs.SetFloat(EffectsVolumeKey, effectsVolume);
+        PlayerPrefs.Save();
+    }
+
+    private void Play(SoundEvent soundEvent, AudioClip clip, bool duckAmbience = false)
     {
         if (this != null && effectsSource != null && clip != null)
         {
             effectsSource.PlayOneShot(clip);
+            LastEvent = soundEvent.ToString();
+            SoundPlayed?.Invoke(soundEvent);
+            if (duckAmbience)
+            {
+                ambienceDuckTimer = scareDuckDuration;
+            }
         }
     }
 
@@ -117,7 +181,12 @@ public class UmbraAudio : MonoBehaviour
         return clip;
     }
 
-    private static AudioClip CreateTone(string name, float duration, float fromFrequency, float toFrequency, float volume)
+    private static AudioClip CreateTone(
+        string name,
+        float duration,
+        float fromFrequency,
+        float toFrequency,
+        float volume)
     {
         const int sampleRate = 44100;
         int sampleCount = Mathf.RoundToInt(sampleRate * duration);
@@ -138,3 +207,4 @@ public class UmbraAudio : MonoBehaviour
         return clip;
     }
 }
+

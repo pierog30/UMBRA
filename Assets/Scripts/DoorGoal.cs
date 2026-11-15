@@ -20,7 +20,7 @@ public class DoorGoal : MonoBehaviour
             return;
         }
 
-        if (!Input.GetKey(KeyCode.E)) return;
+        if (!UmbraInput.InteractHeld) return;
 
         UmbraAudio.Instance?.PlayMechanism();
         UmbraGameEvents.PublishInteraction("Puerta abierta");
@@ -40,7 +40,9 @@ public class DoorGoal : MonoBehaviour
         style.alignment = TextAnchor.MiddleCenter;
         style.fontSize = 15;
         style.normal.textColor = Color.white;
-        string prompt = needsKey && !manager.hasKey ? "FALTA LA LLAVE" : "E — ABRIR";
+        string prompt = needsKey && !manager.hasKey
+            ? "FALTA LA LLAVE"
+            : UmbraInput.MobileMode ? "ACCIÓN — ABRIR" : "E — ABRIR";
         GUI.Label(new Rect((Screen.width - 240f) * 0.5f, Screen.height - 82f, 240f, 32f), prompt, style);
     }
 }

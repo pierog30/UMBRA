@@ -24,7 +24,9 @@ public class HidingSpot2D : MonoBehaviour
         style.alignment = TextAnchor.MiddleCenter;
         style.fontSize = 15;
         style.normal.textColor = Color.white;
-        string action = nearbyPlayer.IsHidden ? "E — SALIR" : "E — ESCONDERSE";
+        string action = UmbraInput.MobileMode
+            ? nearbyPlayer.IsHidden ? "ACCIÓN — SALIR" : "ACCIÓN — ESCONDERSE"
+            : nearbyPlayer.IsHidden ? "E — SALIR" : "E — ESCONDERSE";
         GUI.Label(new Rect((Screen.width - 240f) * 0.5f, Screen.height - 80f, 240f, 35f), action, style);
     }
 }

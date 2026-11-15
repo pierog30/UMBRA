@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class EnemyAI2D : MonoBehaviour
@@ -7,6 +8,9 @@ public class EnemyAI2D : MonoBehaviour
 
     public EnemyKind kind;
     public State CurrentState { get; private set; }
+    public bool CanCurrentlySeePlayer { get; private set; }
+    public Vector2 LastKnownPlayerPosition => lastSeen;
+    public event Action<State, State> StateChanged;
     public float patrolDistance = 3f;
     public float patrolSpeed = 1.5f;
     public float chaseSpeed = 3.8f;
@@ -14,18 +18,29 @@ public class EnemyAI2D : MonoBehaviour
     public float searchTime = 2.5f;
     public LayerMask obstacleMask;
 
+    [Header("Runtime Debug")]
+    [SerializeField] private State debugState;
+    [SerializeField] private bool debugCanSeePlayer;
+
     private Vector2 origin;
     private Vector2 lastSeen;
     private Transform player;
     private float direction = 1f;
     private float timer;
+    private float stateTime;
     private SpriteRenderer body;
+    private Vector3 baseScale;
+    private Color baseColor;
 
     private void Awake()
     {
         origin = transform.position;
         body = GetComponent<SpriteRenderer>();
+        baseScale = transform.localScale;
+        baseColor = body != null ? body.color : Color.white;
         CurrentState = State.Patrol;
+        debugState = CurrentState;
+        ApplyVisualFeedback(true);
     }
 
     private void Start()
@@ -44,18 +59,18 @@ public class EnemyAI2D : MonoBehaviour
         State stateAtFrameStart = CurrentState;
         PlayerController2D controller = player.GetComponent<PlayerController2D>();
         bool canSee = controller != null && !controller.IsHidden && CanSeePlayer();
+        CanCurrentlySeePlayer = canSee;
+        debugCanSeePlayer = canSee;
         if (canSee)
         {
             lastSeen = player.position;
             if (kind == EnemyKind.GrotesqueDemon && (CurrentState == State.Patrol || CurrentState == State.Return))
             {
-                CurrentState = State.Watch;
-                timer = 0.55f;
+                ChangeState(State.Watch, 0.55f);
             }
             else if (CurrentState != State.Watch)
             {
-                CurrentState = State.Chase;
-                timer = searchTime;
+                ChangeState(State.Chase, searchTime);
             }
         }
 
@@ -66,25 +81,24 @@ public class EnemyAI2D : MonoBehaviour
             case State.Watch:
                 timer -= Time.deltaTime;
                 target = transform.position;
-                if (timer <= 0f) CurrentState = State.Chase;
+                if (timer <= 0f) ChangeState(State.Chase, searchTime);
                 break;
             case State.Chase:
                 speed = chaseSpeed;
                 target = canSee ? (Vector2)player.position : lastSeen;
                 if (!canSee && Vector2.Distance(transform.position, lastSeen) < 0.35f)
                 {
-                    CurrentState = State.Search;
-                    timer = searchTime;
+                    ChangeState(State.Search, searchTime);
                 }
                 break;
             case State.Search:
                 timer -= Time.deltaTime;
                 target = lastSeen + Vector2.right * Mathf.Sin(Time.time * 3f);
-                if (timer <= 0f) CurrentState = State.Return;
+                if (timer <= 0f) ChangeState(State.Return);
                 break;
             case State.Return:
                 target = origin;
-                if (Vector2.Distance(transform.position, origin) < 0.25f) CurrentState = State.Patrol;
+                if (Vector2.Distance(transform.position, origin) < 0.25f) ChangeState(State.Patrol);
                 break;
             default:
                 if (Vector2.Distance(transform.position, target) < 0.25f) direction *= -1f;
@@ -100,8 +114,7 @@ public class EnemyAI2D : MonoBehaviour
             }
             else
             {
-                CurrentState = State.Search;
-                timer = searchTime;
+                ChangeState(State.Search, searchTime);
             }
             nextX = transform.position.x;
         }
@@ -114,6 +127,98 @@ public class EnemyAI2D : MonoBehaviour
         {
             UmbraAudio.Instance?.PlayScare();
             Camera.main?.GetComponent<CameraFollow2D>()?.AddTrauma(0.18f);
+        }
+        ApplyVisualFeedback(false);
+    }
+
+    private void ChangeState(State nextState, float nextTimer = -1f)
+    {
+        if (CurrentState == nextState)
+        {
+            return;
+        }
+
+        State previousState = CurrentState;
+        CurrentState = nextState;
+        debugState = CurrentState;
+        stateTime = 0f;
+        if (nextTimer >= 0f)
+        {
+            timer = nextTimer;
+        }
+        StateChanged?.Invoke(previousState, nextState);
+    }
+
+    private void ApplyVisualFeedback(bool immediate)
+    {
+        if (body == null)
+        {
+            return;
+        }
+
+        stateTime += Time.deltaTime;
+        Color stateColor = baseColor;
+        float pulseAmount = 0f;
+        float pulseSpeed = 1f;
+        switch (CurrentState)
+        {
+            case State.Watch:
+                stateColor = baseColor * new Color(1f, 0.78f, 0.35f, 1f);
+                pulseAmount = 0.035f;
+                pulseSpeed = 7f;
+                break;
+            case State.Chase:
+                stateColor = baseColor * new Color(1f, 0.38f, 0.38f, 1f);
+                pulseAmount = 0.07f;
+                pulseSpeed = 10f;
+                break;
+            case State.Search:
+                stateColor = baseColor * new Color(0.72f, 0.55f, 1f, 1f);
+                pulseAmount = 0.025f;
+                pulseSpeed = 5f;
+                break;
+            case State.Return:
+                stateColor = baseColor * new Color(0.62f, 0.78f, 0.9f, 1f);
+                break;
+        }
+        stateColor.a = baseColor.a;
+
+        float pulse = 1f + Mathf.Sin(stateTime * pulseSpeed) * pulseAmount;
+        Vector3 targetScale = baseScale * pulse;
+        if (immediate)
+        {
+            body.color = stateColor;
+            transform.localScale = targetScale;
+            return;
+        }
+
+        body.color = Color.Lerp(body.color, stateColor, Time.deltaTime * 8f);
+        transform.localScale = Vector3.Lerp(transform.localScale, targetScale, Time.deltaTime * 10f);
+    }
+
+    private void OnDisable()
+    {
+        if (body != null)
+        {
+            body.color = baseColor;
+        }
+        transform.localScale = baseScale;
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Vector3 patrolOrigin = Application.isPlaying ? (Vector3)origin : transform.position;
+        Gizmos.color = new Color(0.25f, 0.75f, 1f, 0.9f);
+        Gizmos.DrawWireSphere(transform.position, viewDistance);
+        Gizmos.DrawLine(
+            patrolOrigin + Vector3.left * patrolDistance,
+            patrolOrigin + Vector3.right * patrolDistance);
+
+        if (Application.isPlaying && CurrentState != State.Patrol)
+        {
+            Gizmos.color = CurrentState == State.Chase ? Color.red : new Color(0.7f, 0.35f, 1f, 1f);
+            Gizmos.DrawWireSphere(lastSeen, 0.25f);
+            Gizmos.DrawLine(transform.position, lastSeen);
         }
     }
 
