@@ -1,5 +1,11 @@
 # UMBRA
 
+## Semana 15 — Hito 3
+
+El Hito 3 consolida la IA de enemigos y el sistema de cámara en los cinco capítulos. `EnemyAI2D` utiliza los estados Patrol, Watch, Chase, Search y Return, con campo visual, línea de visión, memoria breve al perder el objetivo y comprobación de paredes y bordes. `CameraFollow2D` incorpora seguimiento suavizado, anticipación según la velocidad del `Rigidbody2D`, límites, zoom y perfiles por zona mediante `CameraZone2D`.
+
+La build de entrega se genera con `UmbraWeek15Build.BuildDeliverable` en `Builds/Semana15/UMBRA_Hito3.exe`.
+
 Videojuego 2D de plataformas, acertijos y terror psicologico creado en Unity 6000.5.2f1.
 La version actual es jugable de principio a fin con arte y sonido provisionales locales.
 

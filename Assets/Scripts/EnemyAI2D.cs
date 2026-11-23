@@ -15,18 +15,24 @@ public class EnemyAI2D : MonoBehaviour
     public float patrolSpeed = 1.5f;
     public float chaseSpeed = 3.8f;
     public float viewDistance = 6.5f;
+    public float verticalTolerance = 2.4f;
+    [Range(30f, 180f)] public float visionAngle = 120f;
+    public float lostSightGrace = 0.35f;
+    public float wallCheckDistance = 0.55f;
     public float searchTime = 2.5f;
     public LayerMask obstacleMask;
 
     [Header("Runtime Debug")]
     [SerializeField] private State debugState;
     [SerializeField] private bool debugCanSeePlayer;
+    [SerializeField] private float debugLostSightTime;
 
     private Vector2 origin;
     private Vector2 lastSeen;
     private Transform player;
     private float direction = 1f;
     private float timer;
+    private float lostSightTimer;
     private float stateTime;
     private SpriteRenderer body;
     private Vector3 baseScale;
@@ -58,11 +64,12 @@ public class EnemyAI2D : MonoBehaviour
 
         State stateAtFrameStart = CurrentState;
         PlayerController2D controller = player.GetComponent<PlayerController2D>();
-        bool canSee = controller != null && !controller.IsHidden && CanSeePlayer();
-        CanCurrentlySeePlayer = canSee;
-        debugCanSeePlayer = canSee;
-        if (canSee)
+        bool directSight = controller != null && !controller.IsHidden && CanSeePlayer();
+        CanCurrentlySeePlayer = directSight;
+        debugCanSeePlayer = directSight;
+        if (directSight)
         {
+            lostSightTimer = lostSightGrace;
             lastSeen = player.position;
             if (kind == EnemyKind.GrotesqueDemon && (CurrentState == State.Patrol || CurrentState == State.Return))
             {
@@ -73,6 +80,11 @@ public class EnemyAI2D : MonoBehaviour
                 ChangeState(State.Chase, searchTime);
             }
         }
+        else
+        {
+            lostSightTimer = Mathf.Max(0f, lostSightTimer - Time.deltaTime);
+        }
+        debugLostSightTime = lostSightTimer;
 
         float speed = patrolSpeed;
         Vector2 target = origin + (Vector2.right * patrolDistance * direction);
@@ -85,8 +97,9 @@ public class EnemyAI2D : MonoBehaviour
                 break;
             case State.Chase:
                 speed = chaseSpeed;
-                target = canSee ? (Vector2)player.position : lastSeen;
-                if (!canSee && Vector2.Distance(transform.position, lastSeen) < 0.35f)
+                target = directSight ? (Vector2)player.position : lastSeen;
+                if (!directSight && lostSightTimer <= 0f &&
+                    Vector2.Distance(transform.position, lastSeen) < 0.35f)
                 {
                     ChangeState(State.Search, searchTime);
                 }
@@ -106,7 +119,8 @@ public class EnemyAI2D : MonoBehaviour
         }
 
         float nextX = Mathf.MoveTowards(transform.position.x, target.x, speed * Time.deltaTime);
-        if (kind == EnemyKind.GrotesqueDemon && !HasGroundAt(nextX))
+        if (kind == EnemyKind.GrotesqueDemon &&
+            (!HasGroundAt(nextX) || HasWallAhead(target.x - transform.position.x)))
         {
             if (CurrentState == State.Patrol)
             {
@@ -147,6 +161,8 @@ public class EnemyAI2D : MonoBehaviour
             timer = nextTimer;
         }
         StateChanged?.Invoke(previousState, nextState);
+        UmbraGameEvents.PublishInteraction(
+            "Enemigo " + name + ": " + previousState + " a " + nextState);
     }
 
     private void ApplyVisualFeedback(bool immediate)
@@ -231,18 +247,33 @@ public class EnemyAI2D : MonoBehaviour
     private bool CanSeePlayer()
     {
         Vector2 delta = player.position - transform.position;
-        if (delta.magnitude > viewDistance || Mathf.Abs(delta.y) > 2.4f)
+        if (delta.magnitude > viewDistance || Mathf.Abs(delta.y) > verticalTolerance)
         {
             return false;
         }
         if (kind == EnemyKind.GrotesqueDemon &&
-            (CurrentState == State.Patrol || CurrentState == State.Return) &&
-            Mathf.Sign(delta.x) != Mathf.Sign(direction))
+            (CurrentState == State.Patrol || CurrentState == State.Return))
         {
-            return false;
+            Vector2 facing = direction >= 0f ? Vector2.right : Vector2.left;
+            if (Vector2.Angle(facing, delta) > visionAngle * 0.5f)
+            {
+                return false;
+            }
         }
         RaycastHit2D hit = Physics2D.Raycast(transform.position, delta.normalized, delta.magnitude, obstacleMask);
         return hit.collider == null;
+    }
+
+    private bool HasWallAhead(float movement)
+    {
+        if (Mathf.Abs(movement) < 0.01f) return false;
+        Vector2 rayOrigin = (Vector2)transform.position + Vector2.up * 0.1f;
+        Vector2 rayDirection = movement > 0f ? Vector2.right : Vector2.left;
+        return Physics2D.Raycast(
+            rayOrigin,
+            rayDirection,
+            wallCheckDistance,
+            obstacleMask).collider != null;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
